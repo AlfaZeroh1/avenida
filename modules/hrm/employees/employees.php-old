@@ -1,0 +1,240 @@
+<?php
+session_start();
+require_once("../../../DB.php");
+require_once("../../../lib.php");
+require_once("Employees_class.php");
+require_once("../../auth/rules/Rules_class.php");
+require_once("../../hrm/sections/Sections_class.php");
+require_once("../../hrm/departments/Departments_class.php");
+require_once("../../hrm/employeestatuss/Employeestatuss_class.php");
+
+$sys = $_GET['sys'];
+
+$obj = (object)$_POST;
+
+if(empty($_SESSION['userid'])){;
+	redirect("../../auth/users/login.php");
+}
+
+$page_title="Employees";
+//connect to db
+$db=new DB();
+//Authorization.
+$auth->roleid="1162";//View
+$auth->levelid=$_SESSION['level'];
+
+auth($auth);
+include"../../../head.php";
+
+$delid=$_GET['delid'];
+$employees=new Employees();
+if(!empty($delid)){
+	$employees->id=$delid;
+	$employees->delete($employees);
+	redirect("employees.php");
+}
+//Authorization.
+$auth->roleid="1161";//View
+$auth->levelid=$_SESSION['level'];
+
+if(existsRule($auth) and $sys==false){
+?>
+<div style="float:left;" class="buttons">
+ <a class="button icon chat" href='addemployees_proc.php'>New Employees</a>
+</div>
+<?php }?>
+<form action="" method="post">
+<table>
+  <tr>
+  <td align="right">Department : </td>
+			<td><select name="departmentid" class="selectbox">
+			<option value="">Select...</option>
+			<?php
+				$departments=new Departments();
+				$where="  ";
+				$fields="hrm_departments.id, hrm_departments.name, hrm_departments.code, hrm_departments.leavemembers, hrm_departments.description, hrm_departments.createdby, hrm_departments.createdon, hrm_departments.lasteditedby, hrm_departments.lasteditedon, hrm_departments.ipaddress";
+				$join="";
+				$having="";
+				$groupby="";
+				$orderby=" order by name ";
+				$departments->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+				while($rw=mysql_fetch_object($departments->result)){
+				?>
+					<option value="<?php echo $rw->id; ?>" <?php if($obj->departmentid==$rw->id){echo "selected";}?>><?php echo initialCap($rw->name);?></option>
+				<?php
+				}
+				?>
+			</select><font color='red'>*</font>
+					</td>
+    <td align="right">Section : </td>
+			<td><select name="sectionid" class="selectbox">
+			<option value="">Select...</option>
+			<?php
+				$sections=new Sections();
+				$where="  ";
+				$fields="hrm_sections.id, hrm_sections.name, hrm_sections.departmentid, hrm_sections.remarks, hrm_sections.ipaddress, hrm_sections.createdby, hrm_sections.createdon, hrm_sections.lasteditedby, hrm_sections.lasteditedon";
+				$join="";
+				$having="";
+				$groupby="";
+				$orderby=" order by name ";
+				$sections->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+				while($rw=mysql_fetch_object($sections->result)){
+				?>
+					<option value="<?php echo $rw->id; ?>" <?php if($obj->sectionid==$rw->id){echo "selected";}?>><?php echo initialCap($rw->name);?></option>
+				<?php
+				}
+				?>
+			</select>
+					
+					Emp Type:
+    <select name="type" class="selectbox">
+      <option value="">Select...</option>
+      <option value="1" <?php if($obj->type==1){echo"selected";}?>>Permanent</option>
+      <option value="2" <?php if($obj->type==2){echo"selected";}?>>Casual</option>
+    </select>
+    &nbsp;
+			<td align="right">Status:</td>
+			<td><select name="statusid" class="selectbox">
+<option value="">Select...</option>
+<?php
+	$employeestatuss=new Employeestatuss();
+	$where="  ";
+	$fields="hrm_employeestatuss.id, hrm_employeestatuss.name";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$employeestatuss->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+	while($rw=mysql_fetch_object($employeestatuss->result)){
+	?>
+		<option value="<?php echo $rw->id; ?>" <?php if($obj->statusid==$rw->id){echo "selected";}?>><?php echo initialCap($rw->name);?></option>
+	<?php
+	}
+	?>
+</select>&nbsp;<input type="submit" class="btn btn-primary" name="action" value="Filter"/></td>
+  </tr>
+</table>
+</form>
+<table style="clear:both;"  class="tgrid display" id="example" width="98%" border="0" cellspacing="0" cellpadding="2" align="center" >
+	<thead>
+		<tr>
+			<th>#</th>
+			<th><input type="checkbox" onclick="selectAll(this);"/></th>
+			<th>PF Number </th>
+			<th>Names </th>
+			<?php if(!$sys){?>
+			<th>DoB </th>
+			<?php }?>
+			<th>ID No </th>
+			<th>Department </th>
+			<th>Section </th>
+			<th>Assignment </th>
+			
+<?php
+//Authorization.
+$auth->roleid="1163";//View
+$auth->levelid=$_SESSION['level'];
+
+if(existsRule($auth)){
+?>
+			<th>&nbsp;</th>
+<?php
+}
+//Authorization.
+$auth->roleid="1164";//View
+$auth->levelid=$_SESSION['level'];
+
+if(existsRule($auth) and $sys==false){
+?>
+<!-- 			<th>&nbsp;</th> -->
+<?php } ?>
+		</tr>
+	</thead>
+	<tbody>
+	<?php
+		$i=0;
+		if(empty($obj->statusid)){
+		  $obj->statusid=1;
+		}
+		$where="";
+		$fields="hrm_employees.id, hrm_employees.pfnum, hrm_departments.name departmentid, hrm_sections.name sectionid, concat(concat(hrm_employees.firstname,' ',hrm_employees.middlename),' ',hrm_employees.lastname) names, hrm_employees.gender, hrm_employees.supervisorid, hrm_employees.startdate, hrm_employees.enddate, hrm_employees.dob, hrm_employees.idno, hrm_employees.passportno, hrm_employees.phoneno, hrm_employees.email, hrm_employees.officemail, hrm_employees.physicaladdress, hrm_nationalitys.name as nationalityid, hrm_countys.name as countyid, hrm_employees.marital, hrm_employees.spouse, hrm_employees.spouseidno, hrm_employees.spousetel, hrm_employees.spouseemail, hrm_employees.nssfno, hrm_employees.nhifno, hrm_employees.pinno, hrm_employees.helbno, hrm_employeebanks.name as bankid, hrm_bankbranches.name as bankbrancheid, hrm_employees.bankacc, hrm_employees.clearingcode, hrm_employees.ref, hrm_employees.basic, hrm_assignments.name as assignmentid, hrm_grades.name as gradeid, hrm_employeestatuss.name as statusid, hrm_employees.image, hrm_employees.createdby, hrm_employees.createdon, hrm_employees.lasteditedby, hrm_employees.lasteditedon";
+		$join=" left join hrm_nationalitys on hrm_employees.nationalityid=hrm_nationalitys.id  left join hrm_countys on hrm_employees.countyid=hrm_countys.id  left join hrm_employeebanks on hrm_employees.employeebankid=hrm_employeebanks.id  left join hrm_bankbranches on hrm_employees.bankbrancheid=hrm_bankbranches.id  left join hrm_assignments on hrm_employees.assignmentid=hrm_assignments.id  left join hrm_grades on hrm_employees.gradeid=hrm_grades.id  left join hrm_employeestatuss on hrm_employees.statusid=hrm_employeestatuss.id left join hrm_departments on hrm_departments.id=hrm_assignments.departmentid left join hrm_sections on hrm_sections.id=hrm_assignments.sectionid ";
+		$having="";
+		$groupby="";
+		$orderby="";
+		if(!empty($obj->departmentid)){
+		  if(!empty($where))
+		    $where.=" and ";
+		  else
+		    $where.=" where ";
+		  $where.=" hrm_assignments.departmentid='$obj->departmentid' ";
+		}
+		if(!empty($obj->sectionid)){
+		  if(!empty($where))
+		    $where.=" and ";
+		  else
+		    $where.=" where ";
+		  $where.=" hrm_assignments.sectionid='$obj->sectionid' ";
+		}
+		if(!empty($obj->statusid)){
+		  if(!empty($where))
+		    $where.=" and ";
+		  else
+		    $where.=" where ";
+		  $where.=" hrm_employees.statusid='$obj->statusid' ";
+		}
+		if(!empty($obj->type)){
+		  if(!empty($where))
+		    $where.=" and ";
+		  else
+		    $where.=" where ";
+		  $where.=" hrm_employees.type='$obj->type' ";
+		}
+		$employees->retrieve($fields,$join,$where,$having,$groupby,$orderby);echo mysql_error();
+		$res=$employees->result;
+		while($row=mysql_fetch_object($res)){
+		$i++;
+	?>
+		<tr>
+			<td><?php echo $i; ?></td>
+			<td><input name="<?php echo $row->id; ?>" type="checkbox" id="<?php echo $row->id; ?>"  value="<?php echo $row->id; ?>"  /></td>
+			<td><?php echo $row->pfnum; ?></td>
+			<td><?php echo initialCap($row->names); ?></td>
+			<?php if(!$sys){?>
+			<td><?php echo formatDate($row->dob); ?></td>
+			<?php }?>
+			<td><?php echo $row->idno; ?></td>
+			<td><?php echo $row->departmentid; ?></td>
+			<td><?php echo $row->sectionid; ?></td>
+			<td><?php echo $row->assignmentid; ?></td>
+			
+<?php
+//Authorization.
+$auth->roleid="1163";//View
+$auth->levelid=$_SESSION['level'];
+
+if(existsRule($auth)){
+?>
+			<td><a href="addemployees_proc.php?id=<?php echo $row->id; ?>&sys=<?php echo $sys; ?>"><img src="../view.png" alt="view" title="view" /></a></td>
+<?php
+}
+//Authorization.
+$auth->roleid="1164";//View
+$auth->levelid=$_SESSION['level'];
+
+if(existsRule($auth) and $sys==false){
+?>
+<!-- 			<td><a href='employees.php?delid=<?php echo $row->id; ?>' onclick="return confirm('Are you sure you want to delete?')"><img src="../trash.png" alt="delete" title="delete" /></a></td> -->
+<?php } ?>
+		</tr>
+	<?php 
+	}
+	?>
+	</tbody>
+</table>
+<?php
+include"../../../foot.php";
+?>

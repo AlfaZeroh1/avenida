@@ -1,0 +1,20 @@
+<?php
+require_once("../../../DB.php");
+require_once("../../../lib.php");
+require_once '../houses/Tenants_class.php';
+
+//connect to db
+$db=new DB();
+
+$id = $_GET['id'];
+
+$tenants=new Tenants();
+$where=" where em_housetenants.tenantid='$id'  ";
+$fields="em_tenants.id, em_tenants.code, em_tenants.firstname, em_tenants.middlename, em_tenants.lastname, em_tenants.postaladdress, em_tenants.address, em_tenants.registeredon, sys_nationalitys.name as nationalityid, em_tenants.tel, em_tenants.mobile, em_tenants.fax, em_tenants.idno, em_tenants.passportno, em_tenants.dlno, em_tenants.occupation, em_tenants.email, em_tenants.dob";
+$join="";
+$having=" ";
+$groupby="";
+$orderby="";
+$tenants->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+$rw=mysql_fetch_object($tenants->result))	
+?>

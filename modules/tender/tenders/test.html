@@ -1,0 +1,201 @@
+<html>
+<head>
+
+
+	<script src="../../../js/ui/jquery.ui.tabs.js"></script>
+	<script>
+	$(function() {
+		// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
+		$( "#dialog:ui-dialog" ).dialog( "destroy" );
+		$( "#dialog-form" ).dialog({
+			autoOpen: false,
+			modal: true,
+
+		});
+
+		$( "#nyef" )
+			.button()
+			.click(function() {
+				$( "#dialog-form" ).dialog( "open" );
+			});
+	});
+	</script>
+
+<script>
+	$(function() {
+		$( "#tabs" ).tabs();
+	});
+</script>
+
+		<script>
+		jQuery(document).ready(function () {
+			$('input.date_input').datepicker({
+					changeMonth: true,
+					changeYear: true,
+					yearRange:  '1930:2100',
+					dateFormat: 'yy-mm-dd'
+				});
+			});
+	</script>
+
+<script language="javascript" type="text/javascript">
+function checkDate(field){
+	var allowBlank = true; var minYear = 1902; var maxYear = 2099; 
+	var errorMsg = ""; 
+// regular expression to match required date format 
+	//re = /^(\d{4})\/(\d{1,2})\/(\d{1,2})$/; 
+	re = /^(\d{4})-(\d{1,2})-(\d{1,2})/;
+	if(field.value != ''){
+		if(regs = field.value.match(re)) { 
+			if(regs[3] < 1 || regs[3] > 31) { 
+				errorMsg = "Invalid value for day: " + regs[3];
+			} 
+			else if(regs[2] < 1 || regs[2] > 12) { 
+				errorMsg = "Invalid value for month: " + regs[2]; 
+			} else if(regs[1] < minYear || regs[1] > maxYear) { 
+				errorMsg = "Invalid value for year: " + regs[1] + " - must be between " + minYear + " and " + maxYear; 
+			} 
+		 } 
+		 else { 
+		 	errorMsg = "Invalid date format: " + field.value; 
+		} 
+	} 
+	else if(!allowBlank) { 
+		errorMsg = "Empty date not allowed!"; 
+	} 
+	if(errorMsg != "") {
+		 alert(errorMsg); field.focus(); 
+		 return false; 
+		} 
+	return true; 
+}
+</script>
+<script type="text/javascript">
+<!--
+function showmenu(id){
+var s = document.getElementById(id).style;
+s.visibility='visible'; 
+}
+//-->
+function timeOut(id){
+setTimeout('hideShow("'+id+'")',3000)
+}
+function hideShow(id){
+var s = document.getElementById(id).style;
+s.visibility=s.visibility=='hidden'?'visible':'hidden'; 
+} 
+</script>
+<script language="javascript" type="text/javascript">
+var newwindow;
+function poptastic(url,h,w)
+{
+	var ht=h;
+	var wd=w;
+	newwindow=window.open(url,'name','height='+ht+',width='+wd+',scrollbars=yes,left=250,top=80');
+	if (window.focus) {newwindow.focus()}
+}
+
+function placeCursorOnPageLoad()
+{
+	if(document.stores)
+		showUser();
+	document.cashsales.itemname.focus();
+		
+}
+</script>
+<!-- TemplateBegin<img src="../edit.png" alt="edit" title="edit" />able name="doctitle" -->
+<title>WiseDigits</title>
+<!-- TemplateEnd<img src="../edit.png" alt="edit" title="edit" />able -->
+<script language="javascript" type="text/javascript">
+$(document).ready(function(){
+var t = $('#ex4 div.jqmdMSG');
+$('#ex4').jqm({
+		trigger: 'a.addpop',
+		ajax: '@href', /* Extract ajax URL from the 'href' attribute of triggering element */
+		target: t,
+		modal: true, /* FORCE FOCUS */
+		onHide: function(h) { 
+			t.html('Please Wait...');  // Clear Content HTML on Hide.
+			h.o.remove(); // remove overlay
+			h.w.fadeOut(888); // hide window
+		},
+		overlay: 0}).jqmHide();
+$('a.addpop').bind('click',function(){
+		var x = $('a.addpop').attr('rel');
+		var y = []; 
+		y = x.split(',');
+		var jWidth = y[0]+'px';
+		var jHeight = y[1]+'px';
+		$('.jqmdBC').css({'width':jWidth,'height':jHeight});
+		return false;
+});
+$('#ex4').jqDrag('.jqDrag').jqResize('.jqResize');	
+
+	   if($.browser.msie)
+		$('input')
+		  .focus(function(){$(this).addClass('iefocus');})
+		  .blur(function(){$(this).removeClass('iefocus');})
+ });
+</script>	
+<script language="javascript" type="text/javascript">
+$(document).ready(function(){
+	$('#formbox').hide();
+	$("#uselog").click(function(){
+		$(this).next("#formbox").animate({opacity:"show", top: "50"},"slow");
+	});
+	$("a#slick-hide").click(function(){
+		$('#formbox').hide('fast');
+		return false;
+	});
+
+});
+</script>
+<!--<script type="text/javascript">
+    $(function () {
+	$("#popover").popover({
+	    html : 'true', 
+	    placement : 'bottom'
+	});
+    });
+</script>-->
+<link href="../../../css/bootstrap/css/bootstrap.css">
+<link href="../../../css/bootstrap.css" rel="stylesheet">
+<link href="../../../css/bootstrap.min.css" rel="stylesheet">
+	<link href="../../../css/bootstrap-datetimepicker.min.css" rel="stylesheet">
+	<link href="../../../css/datepicker.css" rel="stylesheet">
+	<link href="../../../css/fa/css/font-awesome.css" rel="stylesheet">
+<!-- 	<link rel="stylesheet" href="../../../css/fa/datatables/demo_page.css">	 -->
+	<link href="../../../lkimage/jquery.autocomplete.css" media="all" type="text/css" rel="stylesheet" />
+<!-- 	<link rel="stylesheet" href="../../../css/fa/datatables/css/DT_bootstrap.css"> -->
+	<link rel="stylesheet" href="../../../css/lib/datepicker/css/datepicker.css">
+	<link href="../../../css/main.css" rel="stylesheet">
+	<link href="../../../fs-css/elements.css" media="all" type="text/css" rel="stylesheet" />
+	<link href="../../../fs-css/html-elements.css" media="all" type="text/css" rel="stylesheet" />
+	<style type="text/css" title="currentStyle">
+@import "../../../css/demo_page.css";
+@import "../../../css/demo_table_jui.css";
+@import "../../../css/demo_table.css";
+@import "../../../css/jquery-ui-1.8.4.custom.css";
+@import "../../../media/css/TableTools.css";
+</style>
+<script type="text/javascript" language="javascript" src="../../../js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" language="javascript" src="../../../media/ZeroClipboard/ZeroClipboard.js"></script>
+<script type="text/javascript" language="javascript" src="../../../media/js/TableTools.js"></script>
+
+</head>
+<body>
+<div id="tabs">
+  <ul>
+    <li><a href="#tabs-1">TENDER DETAILS</a></li>
+    <li><a href="#tabs-2">DOCUMENTS</a></li>
+    <li><a href="#tabs-3">CHECKLIST</a></li>
+    <li><a href="#tabs-4">BILL OF QUANTITIES</a></li>
+  </ul>
+
+<div class="tab-content">
+    <div id="tabs-1" class="tab-pane active">
+    </div>
+</div>
+</div>
+</body>
+</html>

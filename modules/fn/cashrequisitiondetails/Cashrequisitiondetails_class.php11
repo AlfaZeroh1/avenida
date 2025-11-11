@@ -1,0 +1,212 @@
+<?php 
+require_once("CashrequisitiondetailsDBO.php");
+class Cashrequisitiondetails
+{				
+	var $id;			
+	var $cashrequisitionid;			
+	var $expenseid;			
+	var $quantity;			
+	var $amount;			
+	var $total;			
+	var $ipaddress;			
+	var $createdby;			
+	var $createdon;			
+	var $lasteditedby;			
+	var $lasteditedon;			
+	var $cashrequisitiondetailsDBO;
+	var $fetchObject;
+	var $sql;
+	var $result;
+	var $table;
+	var $affectedRows;
+
+	function setObject($obj){
+		$this->id=str_replace("'","\'",$obj->id);
+		if(empty($obj->cashrequisitionid))
+			$obj->cashrequisitionid='NULL';
+		$this->cashrequisitionid=$obj->cashrequisitionid;
+		if(empty($obj->expenseid))
+			$obj->expenseid='NULL';
+		$this->expenseid=$obj->expenseid;
+		$this->quantity=str_replace("'","\'",$obj->quantity);
+		$this->amount=str_replace("'","\'",$obj->amount);
+		$this->total=str_replace("'","\'",$obj->total);
+		$this->ipaddress=str_replace("'","\'",$obj->ipaddress);
+		$this->createdby=str_replace("'","\'",$obj->createdby);
+		$this->createdon=str_replace("'","\'",$obj->createdon);
+		$this->lasteditedby=str_replace("'","\'",$obj->lasteditedby);
+		$this->lasteditedon=str_replace("'","\'",$obj->lasteditedon);
+		return $this;
+	
+	}
+	//get id
+	function getId(){
+		return $this->id;
+	}
+	//set id
+	function setId($id){
+		$this->id=$id;
+	}
+
+	//get cashrequisitionid
+	function getCashrequisitionid(){
+		return $this->cashrequisitionid;
+	}
+	//set cashrequisitionid
+	function setCashrequisitionid($cashrequisitionid){
+		$this->cashrequisitionid=$cashrequisitionid;
+	}
+
+	//get expenseid
+	function getExpenseid(){
+		return $this->expenseid;
+	}
+	//set expenseid
+	function setExpenseid($expenseid){
+		$this->expenseid=$expenseid;
+	}
+
+	//get quantity
+	function getQuantity(){
+		return $this->quantity;
+	}
+	//set quantity
+	function setQuantity($quantity){
+		$this->quantity=$quantity;
+	}
+
+	//get amount
+	function getAmount(){
+		return $this->amount;
+	}
+	//set amount
+	function setAmount($amount){
+		$this->amount=$amount;
+	}
+
+	//get total
+	function getTotal(){
+		return $this->total;
+	}
+	//set total
+	function setTotal($total){
+		$this->total=$total;
+	}
+
+	//get ipaddress
+	function getIpaddress(){
+		return $this->ipaddress;
+	}
+	//set ipaddress
+	function setIpaddress($ipaddress){
+		$this->ipaddress=$ipaddress;
+	}
+
+	//get createdby
+	function getCreatedby(){
+		return $this->createdby;
+	}
+	//set createdby
+	function setCreatedby($createdby){
+		$this->createdby=$createdby;
+	}
+
+	//get createdon
+	function getCreatedon(){
+		return $this->createdon;
+	}
+	//set createdon
+	function setCreatedon($createdon){
+		$this->createdon=$createdon;
+	}
+
+	//get lasteditedby
+	function getLasteditedby(){
+		return $this->lasteditedby;
+	}
+	//set lasteditedby
+	function setLasteditedby($lasteditedby){
+		$this->lasteditedby=$lasteditedby;
+	}
+
+	//get lasteditedon
+	function getLasteditedon(){
+		return $this->lasteditedon;
+	}
+	//set lasteditedon
+	function setLasteditedon($lasteditedon){
+		$this->lasteditedon=$lasteditedon;
+	}
+
+	function add($obj,$shop){
+		$cashrequisitiondetailsDBO = new CashrequisitiondetailsDBO();
+		$num=count($shop);
+		$i=0;
+		$total=0;
+		$it=0;
+		while($i<$num){
+			$obj->expenseid=$shop[$i]['expenseid'];
+			$obj->expensename=$shop[$i]['expensename'];
+			$obj->quantity=$shop[$i]['quantity'];
+			$obj->amount=$shop[$i]['amount'];
+			$obj->total = $shop[$i]['total'];
+			$total+=$obj->total;
+			if($cashrequisitiondetailsDBO->persist($obj)){	
+			
+			
+			$obj->module="fn";
+			$obj->role="cashrequisitiondetails";
+			/*
+			$tasks = new Tasks();
+			$tasks->workFlow($obj);*/
+				$this->id=$cashrequisitiondetailsDBO->id;
+				$this->sql=$cashrequisitiondetailsDBO->sql;
+			}
+			$i++;
+		}
+		return true;	
+	}			
+	function edit($obj,$where=""){
+		$cashrequisitiondetailsDBO = new CashrequisitiondetailsDBO();
+		if($cashrequisitiondetailsDBO->update($obj,$where)){
+			$this->sql=$cashrequisitiondetailsDBO->sql;
+		}
+			return true;	
+	}			
+	function delete($obj,$where=""){			
+		$cashrequisitiondetailsDBO = new CashrequisitiondetailsDBO();
+		if($cashrequisitiondetailsDBO->delete($obj,$where=""))		
+			$this->sql=$cashrequisitiondetailsDBO->sql;
+			return true;	
+	}			
+	function retrieve($fields,$join,$where,$having,$groupby,$orderby){			
+		$cashrequisitiondetailsDBO = new CashrequisitiondetailsDBO();
+		$this->table=$cashrequisitiondetailsDBO->table;
+		$cashrequisitiondetailsDBO->retrieve($fields,$join,$where,$having,$groupby,$orderby);		
+		$this->sql=$cashrequisitiondetailsDBO->sql;
+		$this->result=$cashrequisitiondetailsDBO->result;
+		$this->fetchObject=$cashrequisitiondetailsDBO->fetchObject;
+		$this->affectedRows=$cashrequisitiondetailsDBO->affectedRows;
+	}			
+	function validate($obj){
+		if(empty($obj->cashrequisitionid)){
+			$error="Cash Requisition should be provided";
+		}
+		else if(empty($obj->expenseid)){
+			$error="Expense should be provided";
+		}
+	
+		if(!empty($error))
+			return $error;
+		else
+			return null;
+	
+	}
+
+	function validates($obj){
+	
+			return null;
+	
+	}
+}				
+?>

@@ -1,0 +1,551 @@
+<?php 
+session_start();
+require_once("../../../DB.php");
+require_once("../../../lib.php");
+require_once("Patienttreatments_class.php");
+
+
+if(empty($_SESSION['userid'])){;
+	redirect("../../auth/users/login.php");
+}
+require_once("../../hos/patients/Patients_class.php");
+require_once("../../hos/patientstatuss/Patientstatuss_class.php");
+require_once("../../hos/diagnosis/Diagnosis_class.php");
+
+require_once("../../hos/patientlaboratorytests/Patientlaboratorytests_class.php");
+require_once("../../hos/patientlaboratorytestdetails/Patientlaboratorytestdetails_class.php");
+require_once("../../hos/laboratorytests/Laboratorytests_class.php");
+
+require_once '../../fn/generaljournalaccounts/Generaljournalaccounts_class.php';
+require_once '../../fn/generaljournals/Generaljournals_class.php';
+require_once '../../hos/patientclasses/Patientclasses_class.php';
+require_once '../../hos/payables/Payables_class.php';
+require_once ("../../inv/stocktrack/Stocktrack_class.php");
+require_once ("../../sys/transactions/Transactions_class.php");
+require_once("../../hos/vitalsigns/Vitalsigns_class.php");
+require_once("../../hos/patientvitalsigns/Patientvitalsigns_class.php");
+
+//Process delete of patientlaboratorytests
+if(!empty($_GET['patientlaboratorytests'])){
+	$patientlaboratorytests = new Patientlaboratorytests ();
+	$patientlaboratorytests->id=$_GET['patientlaboratorytests'];
+	$patientlaboratorytests->delete($patientlaboratorytests);
+}
+require_once("../../hos/patientotherservices/Patientotherservices_class.php");
+require_once("../../hos/patientdiagnosis/Patientdiagnosis_class.php");
+require_once("../../hos/otherservices/Otherservices_class.php");
+
+//Process delete of patientotherservices
+if(!empty($_GET['patientotherservices'])){
+	$patientotherservices = new Patientotherservices ();
+	$patientotherservices->id=$_GET['patientotherservices'];
+	$patientotherservices->delete($patientotherservices);
+}
+//Process delete of patientdiagnosis
+if(!empty($_GET['patientdiagnosis'])){
+	$patientdiagnosis = new Patientdiagnosis ();
+	$patientdiagnosis->id=$_GET['patientdiagnosis'];
+	$patientdiagnosis->delete($patientdiagnosis);
+}
+require_once("../../hos/patientprescriptions/Patientprescriptions_class.php");
+require_once("../../inv/items/Items_class.php");
+require_once ("../../hos/admissions/Admissions_class.php");
+
+//Process delete of patientprescriptions
+if(!empty($_GET['patientprescriptions'])){
+        //process delete of payables
+        $patientprescriptions=new Patientprescriptions();
+	$where=" where hos_patientprescriptions.id='".$_GET['patientprescriptions']."' ";
+	$fields="hos_patientprescriptions.*,inv_items.name as itemname";
+	$join=" left join inv_items on inv_items.id=hos_patientprescriptions.itemid ";
+	$having="";
+	$groupby="";
+	$orderby="";
+// 	$where=" select id from hos_patientprescriptions where '$bj->patientid'";
+	$patientprescriptions->retrieve($fields,$join,$where,$having,$groupby,$orderby);//echo $patientprescriptions->sql;
+	$obf=$patientprescriptions->fetchObject;
+	
+	$payables=new Payables();
+	$where=" where hos_payables.treatmentno='$obf->patienttreatmentid' and remarks='$obf->itemname' and amount='$obf->Totals' ";
+	$fields="*";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$payables->retrieve($fields,$join,$where,$having,$groupby,$orderby);//echo $payables->sql;
+	$payables=$payables->fetchObject;
+        
+        $payable=new Payables();
+        $payable->id=$payables->id;
+        $payable->delete($payable);
+        //process delete of journals
+        $generaljournal=new Generaljournals();
+        $where=" where documentno='$payables->documentno' and remarks='$obf->itemname' and (debit='$obf->Totals' or credit='$obf->Totals') and transactionid=2 ";
+        $generaljournal->delete($generaljournal,$where);
+        
+        
+	$patientprescriptions = new Patientprescriptions ();
+	$patientprescriptions->id=$_GET['patientprescriptions'];
+	$patientprescriptions->delete($patientprescriptions);
+}
+
+
+//connect to db
+$db=new DB();
+$obj=(object)$_POST;
+$ob=(object)$_GET;
+$id=$_GET['treatmentid'];
+$testno = $_GET['testno'];
+
+$action3 = $_GET['action3'];
+
+$error=$_GET['error'];
+
+if(!empty($ob->admit)){
+  $admissions = new Admissions();
+  $ob->admissiondate=date("Y-m-d");
+  $ob->status=0;
+  $admissions = $admissions->setObject($ob);
+  $admissions->add($admissions);
+  
+  $patienttreatments=new Patienttreatments();
+  $where=" where id=$ob->treatmentid ";
+  $fields="hos_patienttreatments.id, hos_patienttreatments.patientid,hos_patienttreatments.admission, hos_patienttreatments.patientappointmentid, hos_patienttreatments.symptoms,hos_patienttreatments.investigation,hos_patienttreatments.hpi,hos_patienttreatments.obs,hos_patienttreatments.findings, hos_patienttreatments.diagnosiid, hos_patienttreatments.diagnosis,hos_patienttreatments.treatment, hos_patienttreatments.treatedon, hos_patienttreatments.patientstatusid, hos_patienttreatments.createdby, hos_patienttreatments.createdon, hos_patienttreatments.lasteditedby, hos_patienttreatments.lasteditedon";
+  $join="";
+  $having="";
+  $groupby="";
+  $orderby="";
+  $patienttreatments->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+  $patienttreatments=$patienttreatments->fetchObject;
+  $patienttreatments->admission="Yes";
+  
+  $pt = new Patienttreatments();
+  $pt=$pt->setObject($patienttreatments);
+  $pt->edit($pt);
+  
+}
+
+if(!empty($ob->pid)){
+  
+}
+
+if(!empty($id)){
+	$patienttreatments=new Patienttreatments();
+	$where=" where id=$id ";
+	$fields="hos_patienttreatments.id,hos_patienttreatments.prescription,hos_patienttreatments.labtests,hos_patienttreatments.patientid,hos_patienttreatments.admission, hos_patienttreatments.patientappointmentid, hos_patienttreatments.symptoms,hos_patienttreatments.investigation,hos_patienttreatments.hpi,hos_patienttreatments.obs,hos_patienttreatments.findings, hos_patienttreatments.diagnosiid, hos_patienttreatments.diagnosis,hos_patienttreatments.treatment, hos_patienttreatments.treatedon, hos_patienttreatments.patientstatusid, hos_patienttreatments.createdby, hos_patienttreatments.createdon, hos_patienttreatments.lasteditedby, hos_patienttreatments.lasteditedon";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$patienttreatments->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+	$obj=$patienttreatments->fetchObject;
+}
+	
+if($obj->action=="Save Treatment"){
+	$obj->createdby=$_SESSION['userid'];
+	$obj->createdon=date("Y-m-d H:i:s");
+	$obj->lasteditedby=$_SESSION['userid'];
+	$obj->lasteditedon=date("Y-m-d H:i:s");
+	$error=validate($obj);
+	if(!empty($error)){
+		$error=$error;
+	}
+	else{
+		$patienttreatments=new Patienttreatments();
+		$patienttreatments=setObject($obj);
+		if($patienttreatments->add($patienttreatments)){
+			$error=SUCCESS;
+			//redirect("addpatienttreatments_proc.php?treatmentid=$obj->id&testno=$obj->testno&error=".$error."#tabs-3");
+		}
+		else{
+			$error=FAILURE;
+		}
+	}
+}
+	
+if($obj->action=="Update"){
+	$obj->lasteditedby=$_SESSION['userid'];
+	$obj->lasteditedon=date("Y-m-d");
+	$error=validate($obj);
+	if(!empty($error)){
+		$error=$error;
+	}
+	else{
+		$patienttreatments=new Patienttreatments();
+		$obj->id=$obj->treatmentid;
+		$patienttreatments=$patienttreatments->setObject($obj);
+		if($patienttreatments->edit($patienttreatments)){		
+			$error=UPDATESUCCESS;
+			redirect("addpatienttreatments_proc.php?treatmentid=$obj->treatmentid&tab=2&testno=$obj->testno&error=".$error."#tabs-3");
+		}
+		else{
+			$error=UPDATEFAILURE;
+		}
+	}
+}
+//Process adding of patientlaboratorytests
+if($obj->action=="Add Laboratorytest"){
+		
+	$patientlaboratorytests = new Patientlaboratorytests();
+	
+	$patienttreatments = new Patienttreatments();
+	$fields="hos_patienttreatments.patientid,hos_patientappointments.departmentid ";
+	$join=" left join hos_patientappointments on hos_patientappointments.id=hos_patienttreatments.patientappointmentid";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$where=" where hos_patienttreatments.id='$obj->treatmentid'";
+	$patienttreatments->retrieve($fields, $join, $where, $having, $groupby, $orderby);//echo $patienttreatments->sql;
+	$pat=$patienttreatments->fetchObject;
+
+	$patientlaboratorytests->patienttreatmentid=$obj->treatmentid;
+	$patientlaboratorytests->patientid=$pat->patientid;
+	$patientlaboratorytests->createdby=$_SESSION['userid'];
+	$patientlaboratorytests->createdon=date("Y-m-d H:i:s");
+	$patientlaboratorytests->lasteditedby=$_SESSION['userid'];
+	$patientlaboratorytests->lasteditedon=date("Y-m-d H:i:s");
+	$patientlaboratorytests->testno=$obj->testno;
+
+	$patientlaboratorytests->laboratorytestid=$obj->laboratorytestslaboratorytestid;
+	$patientlaboratorytests->testedon=date("Y-m-d");
+	$patientlaboratorytests->consult=1;
+	$patientlaboratorytests->labresults=$obj->laboratorytestslabresults;
+	$patientlaboratorytests->charge=$obj->laboratorytestscharge;
+
+	if($patientlaboratorytests->add($patientlaboratorytests)){
+		
+		$obj->remarks = $obj->laboratorytestslaboratorytestname;
+		$obj->patientid=$patientlaboratorytests->patientid;
+		$obj->treatmentno=$obj->treatmentid;
+		$obj->consult=$patientlaboratorytests->consult;
+		$obj->paid="No";
+		$obj->amount=$obj->laboratorytestscharge;
+		$obj->transactionid=7;
+		$obj->departmentid=$pat->departmentid;
+		$obj->invoicedon=date("Y-m-d");
+		$obj->createdby=$_SESSION['userid'];
+		$obj->createdon=date("Y-m-d H:i:s");
+		$obj->lasteditedby=$_SESSION['userid'];
+		$obj->lasteditedon=date("Y-m-d H:i:s");
+		
+		$payables = new Payables();
+		$payables->setObject($obj);
+		$payables->transactdate=$obj->invoicedon;
+		$payables->add($payables);
+		}
+	
+	$obj->laboratorytestslaboratorytestid="";
+	$obj->laboratorytestslabresults="";
+	$obj->laboratorytestscharge="";
+	redirect("addpatienttreatments_proc.php?treatmentid=$obj->treatmentid&tab=3&testno=$obj->testno&error=".$error."#tabs-4");
+}
+
+
+//Process adding of patientvitalsigns
+if($obj->action=="Add Patienvitasigns"){
+		
+	$patientvitalsigns = new Patientvitalsigns();
+	
+        $vitalsigns=new Vitalsigns();
+	$where="  ";
+	$fields="hos_vitalsigns.id, hos_vitalsigns.name, hos_vitalsigns.remarks";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$vitalsigns->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+	while($rw=mysql_fetch_object($vitalsigns->result)){
+	
+	$patientvitalsigns->vitalsignid=$rw->id;
+	$patientvitalsigns->results=$_POST['results'.$rw->id];
+	$patientvitalsigns->remarks=$_POST['remarks'.$rw->id];  
+	$patientvitalsigns->observedon=date("Y-m-d");
+	$patientvitalsigns->observedtime=date("H:i:s");
+	$patientvitalsigns->patientappointmentid=$obj->patientappointmentid;
+	$patientvitalsigns->patientid=$obj->patientid;
+	$patientvitalsigns->patienttreatmentid=$obj->treatmentid;	
+	$patientvitalsigns->createdby=$_SESSION['userid'];
+	$patientvitalsigns->createdon=date("Y-m-d H:i:s");
+	$patientvitalsigns->lasteditedby=$_SESSION['userid'];
+	$patientvitalsigns->lasteditedon=date("Y-m-d H:i:s");
+	$patientvitalsigns->ipaddress=$_SERVER['REMOTE_ADDR'];
+
+	$patientvitalsigns=$patientvitalsigns->setObject($patientvitalsigns);
+
+	$patientvitalsigns->add($patientvitalsigns);//echo mysql_error(); echo $patientvitalsigns->sql;
+	}
+	$error="SUCCESS";
+	redirect("addpatienttreatments_proc.php?treatmentid=$obj->treatmentid&tab=13&error=".$error."#tabs-13");
+	
+}
+
+//Process adding of patientotherservices
+if($obj->action=="Add Otherservice"){
+	$patientotherservices = new Patientotherservices ();
+
+	$patienttreatments = new Patienttreatments();
+	$fields="hos_patienttreatments.patientid,hos_patientappointments.departmentid ";
+	$join=" left join hos_patientappointments on hos_patientappointments.id=hos_patienttreatments.patientappointmentid";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$where=" where hos_patienttreatments.id='$obj->treatmentid'";
+	$patienttreatments->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+	$pat=$patienttreatments->fetchObject;
+		
+	$patientotherservices->patienttreatmentid=$obj->treatmentid;
+	$patientotherservices->patientid=$pat->patientid;
+	$patientotherservices->createdby=$_SESSION['userid'];
+	$patientotherservices->createdon=date("Y-m-d H:i:s");
+	$patientotherservices->lasteditedby=$_SESSION['userid'];
+	$patientotherservices->lasteditedon=date("Y-m-d H:i:s");
+
+	$patientotherservices->otherserviceid=$obj->otherservicesotherserviceid;
+	$patientotherservices->charge=$obj->otherservicescharge;
+	$patientotherservices->remarks=$obj->otherservicesremarks;
+
+	if($patientotherservices->add($patientotherservices)){		
+		
+		$obj->transactionid=8;		
+		$obj->patientid=$pat->patientid;
+		$obj->treatmentno=$obj->treatmentid;
+		$obj->consult=1;
+		$obj->paid="No";
+		$obj->amount=$obj->otherservicescharge;
+		$obj->invoicedon=date("Y-m-d");
+		$obj->departmentid=$pat->departmentid;
+		$obj->createdby=$_SESSION['userid'];
+		$obj->createdon=date("Y-m-d H:i:s");
+		$obj->lasteditedby=$_SESSION['userid'];
+		$obj->lasteditedon=date("Y-m-d H:i:s");
+		
+		$obj->remarks = $obj->otherservicesotherservicename;
+		$payables = new Payables();
+		$payables->setObject($obj);
+		$payables->transactdate=$obj->invoicedon;
+		$payables->add($payables);
+	}
+
+	$obj->otherservicesotherserviceid="";
+	$obj->otherservicescharge="";
+	$obj->otherservicesremarks="";
+	redirect("addpatienttreatments_proc.php?treatmentid=$obj->treatmentid&tab=4&testno=$obj->testno&error=".$error."#tabs-5");
+}
+
+
+
+//Process adding of Patientdiagnosis
+if($obj->action=="Add Patientdiagnosis"){
+	$patientdiagnosis = new Patientdiagnosis ();
+
+	$patienttreatments = new Patienttreatments();
+	$fields="hos_patienttreatments.patientid,hos_patientappointments.departmentid ";
+	$join=" left join hos_patientappointments on hos_patientappointments.id=hos_patienttreatments.patientappointmentid";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$where=" where hos_patienttreatments.id='$obj->treatmentid'";
+	$patienttreatments->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+	$pat=$patienttreatments->fetchObject;
+		
+	$patientdiagnosis->patienttreatmentid=$obj->treatmentid;
+	$patientdiagnosis->patientid=$pat->patientid;
+	$patientdiagnosis->createdby=$_SESSION['userid'];
+	$patientdiagnosis->createdon=date("Y-m-d H:i:s");
+	$patientdiagnosis->lasteditedby=$_SESSION['userid'];
+	$patientdiagnosis->lasteditedon=date("Y-m-d H:i:s");
+
+	$patientdiagnosis->diagnosiid=$obj->patientdiagnosisdiagnosiid;
+	$patientdiagnosis->remarks=$obj->patientdiagnosisremarks;  
+	
+        if($patientdiagnosis->add($patientdiagnosis)){
+	//echo mysql_error(); echo $patientdiagnosis->sql;		
+		
+        
+	}
+	
+	
+
+	$obj->patientdiagnosisdiagnosiid="";
+	$obj->patientdiagnosisremarks="";
+	redirect("addpatienttreatments_proc.php?treatmentid=$obj->treatmentid&tab=4&testno=$obj->testno&error=".$error."#tabs-14");
+}
+
+
+
+
+//Process adding of patientprescriptions
+if($obj->action=="Add Item"){
+	
+	
+	
+	$patientprescriptions = new Patientprescriptions ();
+
+	$patientprescriptions->patienttreatmentid=$obj->treatmentid;
+	$patientprescriptions->createdby=$_SESSION['userid'];
+	$patientprescriptions->createdon=date("Y-m-d H:i:s");
+	$patientprescriptions->lasteditedby=$_SESSION['userid'];
+	$patientprescriptions->lasteditedon=date("Y-m-d H:i:s");
+
+
+	$obj->totals = ($obj->itemsprice*$obj->itemsquantity);
+
+	$patientprescriptions->itemid=$obj->itemsitemid;
+	$patientprescriptions->quantity=$obj->itemsquantity;
+	$patientprescriptions->remarks=$obj->presremarks;
+	$patientprescriptions->price=$obj->itemsprice;
+	$patientprescriptions->frequency=$obj->frequency;
+	$patientprescriptions->duration = $obj->duration;
+	$patientprescriptions->totals = $obj->totals;
+	
+
+
+
+
+	if($patientprescriptions->add($patientprescriptions)){
+		
+		$patienttreatments = new Patienttreatments();
+		$fields="hos_patienttreatments.patientid,hos_patientappointments.departmentid ";
+		$join=" left join hos_patientappointments on hos_patientappointments.id=hos_patienttreatments.patientappointmentid";
+		$having="";
+		$groupby="";
+		$orderby="";
+		$where=" where hos_patienttreatments.id='$obj->treatmentid'";
+		$patienttreatments->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+		$pat=$patienttreatments->fetchObject;
+		
+		$obj->transactionid=10;		
+		$obj->patientid=$pat->patientid;
+		$obj->departmentid=$pat->departmentid;
+		$obj->treatmentno=$obj->treatmentid;
+		$obj->consult=1;
+		$obj->paid="No";
+		$obj->amount=$obj->totals;
+		$obj->invoicedon=date("Y-m-d");
+		$obj->createdby=$_SESSION['userid'];
+		$obj->createdon=date("Y-m-d H:i:s");
+		$obj->lasteditedby=$_SESSION['userid'];
+		$obj->lasteditedon=date("Y-m-d H:i:s");
+		$obj->remarks = $obj->itemname;
+		$payables = new Payables();
+		$payables->setObject($obj);
+		$payables->transactdate=$obj->invoicedon;
+		$payables->add($payables);
+		
+		if($obj->action3=="Prescribe"){
+	
+		    //update item quantity
+		    $items = new Items();
+		    $fields="*";
+		    $where=" where id='$obj->itemsitemid'";
+		    $join="";
+		    $having="";
+		    $groupby="";
+		    $orderby="";
+		    $items->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+		    $items=$items->fetchObject;
+		    $items->quantity=$items->quantity-$ob->quantity;
+		    
+		    $it = new Items();
+		    $it->setObject($items);
+		    $it->edit($it);
+		    
+		    $patientprescription = new Patientprescriptions();
+		    $fields="*";
+		    $where=" where id='$patientprescriptions->id'";
+		    $join="";
+		    $having="";
+		    $groupby="";
+		    $orderby="";
+		    $patientprescription->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+		    $patientprescription= $patientprescription->fetchObject;
+		    $patientprescription->issued=1;
+		    
+		    $pat = new Patientprescriptions();
+		    $pat->setObject($patientprescription);
+		    $pat->edit($pat);
+		    
+	    }
+	}
+
+	$obj->itemsitemid="";
+	$obj->itemsquantity="";
+	$obj->itemsprice="";
+	$obj->totals="";
+	redirect("addpatienttreatments_proc.php?treatmentid=".$obj->treatmentid."&tab=5&action3=$obj->action3&testno=$obj->testno&error=".$error."#tabs-6");
+}
+
+if(empty($obj->action)){
+
+	$patients= new Patients();
+	$fields="hos_patients.id, hos_patients.patientno, hos_patients.surname, hos_patients.othernames, hos_patients.address, hos_patients.email, hos_patients.mobile, hos_patients.genderid, hos_patients.dob,  hos_patients.createdby, hos_patients.createdon, hos_patients.lasteditedby, hos_patients.lasteditedon";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$patients->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+
+	$patientstatuss= new Patientstatuss();
+	$fields="hos_patientstatuss.id, hos_patientstatuss.name";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$patientstatuss->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+}
+if(empty($id) and empty($obj->action)){
+	$obj->action="Save";
+	
+	$patientlaboratorytests = new Patientlaboratorytests ();
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$fields=" max(testno) testno ";
+	$where="";
+	$patientlaboratorytests->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+	$test=$patientlaboratorytests->fetchObject;
+	$obj->testno=$test->testno+1;
+	
+	$obj->admission="No";
+	
+}	
+elseif(!empty($id) and empty($obj->action)){
+	$obj->action="Update";
+}
+	
+	
+function validate($obj){
+	/*if(empty($obj->patientid)){
+		$error="patientid should be provided";
+	}
+	else if(empty($obj->patientappointmentid)){
+		$error="patientappointmentid should be provided";
+	}
+	else if(empty($obj->patientstatusid)){
+		$error="patientstatusid should be provided";
+	}*/
+	
+	if(!empty($error))
+		return $error;
+	else
+		return null;
+	
+}
+
+if(!empty($action3)){
+  $obj->action3=$action3;
+}
+
+$query="select max(id) maxid from hos_patientappointments";
+$rw=mysql_fetch_object(mysql_query($query));
+
+$obj->maxid=$rw->maxid;
+
+if(!empty($testno))
+	$obj->testno=$testno;
+$page_title="Patient Treatments";
+include "addpatienttreatments.php";
+?>

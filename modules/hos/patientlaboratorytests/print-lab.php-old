@@ -1,0 +1,171 @@
+<?php
+session_start();
+require_once("../../../DB.php");
+require_once("../../../lib.php");
+require_once("Patientlaboratorytests_class.php");
+require_once '../../sys/config/Config_class.php';
+
+$config = new Config();
+$fields="*";
+$config->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+$arr = array();
+while($rw=mysql_fetch_object($config->result)){
+	$arr[$rw->name]=$rw->value;
+}
+
+$testno=$_GET['testno'];
+
+$patientlaboratorytests = new Patientlaboratorytests();
+$fields=" concat(hos_patients.surname,' ', hos_patients.othernames) as name, hos_patientlaboratorytests.testedon ";
+$join=" left join hos_patients on hos_patients.id=hos_patientlaboratorytests.patientid ";
+$where=" where hos_patientlaboratorytests.testno='$testno' and hos_patientlaboratorytests.testedon!='0000-00-00'";
+$patientlaboratorytests->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+$patient = $patientlaboratorytests->fetchObject;
+
+?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Print Laboratory</title>
+<script type="text/javascript">
+  function print_doc()
+  {
+		
+  		var printers = jsPrintSetup.getPrintersList().split(',');
+		// Suppress print dialog
+		jsPrintSetup.setSilentPrint(false);/** Set silent printing */
+
+		var i;
+		for(i=0; i<printers.length;i++)
+		{//alert(i+": "+printers[i]);
+			if(printers[i].indexOf('<?php echo $arr['smallprinter'];?>')>-1)
+			{	
+				jsPrintSetup.setPrinter(printers[i]);
+			}
+			
+		}
+		//set number of copies to 2
+		jsPrintSetup.setOption('numCopies',1);
+		jsPrintSetup.setOption('headerStrCenter','');
+		jsPrintSetup.setOption('headerStrRight','');
+		jsPrintSetup.setOption('headerStrLeft','');
+		jsPrintSetup.setOption('footerStrCenter','');
+		jsPrintSetup.setOption('footerStrRight','');
+		jsPrintSetup.setOption('footerStrLeft','');
+		jsPrintSetup.setOption('marginLeft','1');
+		jsPrintSetup.setOption('marginRight','1');
+		// Do Print
+		jsPrintSetup.printWindow(window);
+		
+		//window.close();
+		window.top.hidePopWin(true);
+		// Restore print dialog
+		//jsPrintSetup.setSilentPrint(false); /** Set silent printing back to false */
+ 
+  }
+ </script>
+<style media="print" type="text/css">
+.noprint{ display:none;}
+</style>
+<style type="text/css" media="all">
+	body{font-family:'arial';font-size:12px;}
+	
+	table {border:0px solid;width:100%;margin:1px;padding:0px;border-spacing:0px}
+	
+	table thead th {
+text-align: left;
+vertical-align: bottom;
+border-right: 1px solid #ddd;
+border-bottom: 1px solid #ddd;
+border-top: 1px solid #ddd;
+padding:8px;
+line-height:none !important;
+font-family:'arial';font-size:11px;
+}
+
+	
+	/*td{border:1px solid #ccc;}
+	tr{border:1px solid;}*/
+	
+	</style>
+
+</head>
+<body onload="print_doc();">
+<div align="center" id="print_content" style="width:98%; margin:0px auto;">
+   <table class="tgrid gridd" width="98%" cellspacing="0">
+   <thead> <tr><td colspan="9"><div>
+   <div class="hfields" align="left">
+ <div align="center" style="font-weight:bold;page-break-inside:avoid; page-break-after:avoid; page-break-before:avoid; display:block;">
+
+ <span style="display:block; padding:0px 0px 2px;"><?php echo $arr['companyname']; ?> </span>
+<span style="display:block; padding:0px 0px 1px;"><?php echo $arr['companytitle']; ?></span>
+<span style="display:block; padding:0px 0px 1px;"><?php echo $arr['companyaddr'];?>,<br/><?php echo $arr['companytown']; ?></span>
+<span style="display:block; padding:0px 0px 1px;"><?php echo $arr['companydesc'];?></span>
+<span style="display:block; padding:0px 0px 1px;">Tel: <?php echo $arr['companytel'];?></span> </div>
+ 
+ <span style="display:block; padding:3px 10px; font-size:16px; text-align:center; font-weight:bold; color:#fff; background-color:#999">Laboratory Results</span></div>
+ <div class="hfields" align="left" style="float:left; width:100%; padding-left:5px;">
+ <hr/>
+ <table align="center">
+ <tr>
+ <td align="right"><strong>Patient:</strong></td><td> <?php echo initialCap($patient->name); ?></td>
+ </tr>
+ <tr>
+ <td align="right"><strong>Tested On:</strong></td><td> <?php echo formatDate($patient->testedon); ?></td>
+ </tr>
+ <tr>
+ <td align="right"><strong>Lab No:</strong></td><td> <?php echo $testno; ?></td>
+ </tr>
+ <tr>
+ <td align="right"><strong>Technician:</strong></td><td> <?php $emp=mysql_fetch_object(mysql_query("select h.firstname from hrm_employees h left join auth_users u on h.id=u.employeeid left join hos_patientlaboratorytests t on t.createdby=u.id where t.testno='$testno'")); echo $emp->firstname; ?></td>
+ </tr>
+ <tr>
+ </table>
+ <hr/></div>
+ 
+   </div></td></tr><tr class="phead">
+		<th width="5%"  style="border-left:none;"></th>
+<th style="text-align:left;">Lab Test</th>
+<th style="text-align:left;">Lab Results</th>
+<th ><div>Results</div></th>
+</tr></thead>
+		<tbody class="" style="width:100%;  ">
+		<tr>
+				<td colspan='3'><hr/></td>
+			</tr>
+      <?php 
+      $patientlaboratorytests = new Patientlaboratorytests();
+      $i=0;
+      $where=" where testno='$testno' ";
+      $fields=" hos_laboratorytests.name, hos_patientlaboratorytests.labresults,hos_patientlaboratorytests.results  ";
+      $join=" left join hos_laboratorytests on hos_laboratorytests.id=hos_patientlaboratorytests.laboratorytestid ";
+      $patientlaboratorytests->retrieve($fields, $join, $where, $having, $groupby, $orderby); 
+      while($row=mysql_fetch_object($patientlaboratorytests->result)){$i++;
+      ?>			
+		    <tr>
+				<td valign='top'><?php echo $i; ?>:</td>
+				<td valign='top'><?php echo $row->name; ?></td>
+				<td valign='top'><?php echo $row->results; ?></td>
+				<td valign='top'><?php echo $row->labresults; ?></td>
+			</tr>	
+			<!--<tr>
+				<td colspan='3'><hr/></td>
+			</tr>-->
+	<?php 
+	}
+	?>
+	<tr>
+				<td colspan='3'><hr/></td>
+			</tr>
+      </tbody>
+      <tfoot>
+            
+             <tr>
+           <td colspan="3" align="center" style="font: italic;"><font style="italic"><i><?php echo $arr['labtestfooter'];?></i></font></td>
+           </tr>
+             </tfoot>
+  </table>
+</div>
+</body>
+</html>

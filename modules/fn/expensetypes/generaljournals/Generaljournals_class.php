@@ -1,0 +1,385 @@
+<?php 
+require_once("GeneraljournalsDBO.php");
+class Generaljournals
+{				
+	var $id;			
+	var $accountid;			
+	var $daccountid;			
+	var $tid;			
+	var $documentno;			
+	var $mode;			
+	var $transactionid;			
+	var $remarks;			
+	var $memo;			
+	var $transactdate;			
+	var $debit;			
+	var $credit;
+	var $drtotals;
+	var $crtotals;
+	var $jvno;			
+	var $chequeno;			
+	var $did;			
+	var $reconstatus;
+	var $balance;
+	var $recondate;			
+	var $class;			
+	var $ipaddress;			
+	var $createdby;			
+	var $createdon;			
+	var $lasteditedby;			
+	var $lasteditedon;			
+	var $generaljournalsDBO;
+	var $fetchObject;
+	var $sql;
+	var $result;
+	var $table;
+	var $affectedRows;
+
+	function setObject($obj){
+		$this->id=str_replace("'","\'",$obj->id);
+		if(empty($obj->accountid))
+			$obj->accountid='NULL';
+		$this->accountid=$obj->accountid;
+		$this->daccountid=str_replace("'","\'",$obj->daccountid);
+		$this->tid=str_replace("'","\'",$obj->tid);
+		$this->documentno=str_replace("'","\'",$obj->documentno);
+		$this->mode=str_replace("'","\'",$obj->mode);
+		$this->transactionid=str_replace("'","\'",$obj->transactionid);
+		$this->remarks=str_replace("'","\'",$obj->remarks);
+		$this->memo=str_replace("'","\'",$obj->memo);
+		$this->transactdate=str_replace("'","\'",$obj->transactdate);
+		$this->debit=str_replace("'","\'",$obj->debit);
+		$this->credit=str_replace("'","\'",$obj->credit);		
+		$this->crtotals=str_replace(",","",$obj->crtotals);
+		$this->drtotals=str_replace(",","",$obj->drtotals);
+		$this->jvno=str_replace("'","\'",$obj->jvno);
+		$this->chequeno=str_replace("'","\'",$obj->chequeno);
+		$this->did=str_replace("'","\'",$obj->did);
+		$this->reconstatus=str_replace("'","\'",$obj->reconstatus);
+		$this->balance=str_replace("'","\'",$obj->balance);
+		$this->recondate=str_replace("'","\'",$obj->recondate);
+		$this->class=str_replace("'","\'",$obj->class);
+		$this->ipaddress=str_replace("'","\'",$obj->ipaddress);
+		$this->createdby=str_replace("'","\'",$obj->createdby);
+		$this->createdon=str_replace("'","\'",$obj->createdon);
+		$this->lasteditedby=str_replace("'","\'",$obj->lasteditedby);
+		$this->lasteditedon=str_replace("'","\'",$obj->lasteditedon);
+		return $this;
+	
+	}
+	//get id
+	function getId(){
+		return $this->id;
+	}
+	//set id
+	function setId($id){
+		$this->id=$id;
+	}
+
+	//get accountid
+	function getAccountid(){
+		return $this->accountid;
+	}
+	//set accountid
+	function setAccountid($accountid){
+		$this->accountid=$accountid;
+	}
+
+	//get daccountid
+	function getDaccountid(){
+		return $this->daccountid;
+	}
+	//set daccountid
+	function setDaccountid($daccountid){
+		$this->daccountid=$daccountid;
+	}
+
+	//get tid
+	function getTid(){
+		return $this->tid;
+	}
+	//set tid
+	function setTid($tid){
+		$this->tid=$tid;
+	}
+
+	//get documentno
+	function getDocumentno(){
+		return $this->documentno;
+	}
+	//set documentno
+	function setDocumentno($documentno){
+		$this->documentno=$documentno;
+	}
+
+	//get mode
+	function getMode(){
+		return $this->mode;
+	}
+	//set mode
+	function setMode($mode){
+		$this->mode=$mode;
+	}
+
+	//get transactionid
+	function getTransactionid(){
+		return $this->transactionid;
+	}
+	//set transactionid
+	function setTransactionid($transactionid){
+		$this->transactionid=$transactionid;
+	}
+
+	//get remarks
+	function getRemarks(){
+		return $this->remarks;
+	}
+	//set remarks
+	function setRemarks($remarks){
+		$this->remarks=$remarks;
+	}
+
+	//get memo
+	function getMemo(){
+		return $this->memo;
+	}
+	//set memo
+	function setMemo($memo){
+		$this->memo=$memo;
+	}
+
+	//get transactdate
+	function getTransactdate(){
+		return $this->transactdate;
+	}
+	//set transactdate
+	function setTransactdate($transactdate){
+		$this->transactdate=$transactdate;
+	}
+
+	//get debit
+	function getDebit(){
+		return $this->debit;
+	}
+	//set debit
+	function setDebit($debit){
+		$this->debit=$debit;
+	}
+
+	//get credit
+	function getCredit(){
+		return $this->credit;
+	}
+	//set credit
+	function setCredit($credit){
+		$this->credit=$credit;
+	}
+
+	//get jvno
+	function getJvno(){
+		return $this->jvno;
+	}
+	//set jvno
+	function setJvno($jvno){
+		$this->jvno=$jvno;
+	}
+
+	//get chequeno
+	function getChequeno(){
+		return $this->chequeno;
+	}
+	//set chequeno
+	function setChequeno($chequeno){
+		$this->chequeno=$chequeno;
+	}
+
+	//get did
+	function getDid(){
+		return $this->did;
+	}
+	//set did
+	function setDid($did){
+		$this->did=$did;
+	}
+
+	//get reconstatus
+	function getReconstatus(){
+		return $this->reconstatus;
+	}
+	//set reconstatus
+	function setReconstatus($reconstatus){
+		$this->reconstatus=$reconstatus;
+	}
+
+	//get recondate
+	function getRecondate(){
+		return $this->recondate;
+	}
+	//set recondate
+	function setRecondate($recondate){
+		$this->recondate=$recondate;
+	}
+
+	//get class
+	function getClass(){
+		return $this->class;
+	}
+	//set class
+	function setClass($class){
+		$this->class=$class;
+	}
+
+	//get ipaddress
+	function getIpaddress(){
+		return $this->ipaddress;
+	}
+	//set ipaddress
+	function setIpaddress($ipaddress){
+		$this->ipaddress=$ipaddress;
+	}
+
+	//get createdby
+	function getCreatedby(){
+		return $this->createdby;
+	}
+	//set createdby
+	function setCreatedby($createdby){
+		$this->createdby=$createdby;
+	}
+
+	//get createdon
+	function getCreatedon(){
+		return $this->createdon;
+	}
+	//set createdon
+	function setCreatedon($createdon){
+		$this->createdon=$createdon;
+	}
+
+	//get lasteditedby
+	function getLasteditedby(){
+		return $this->lasteditedby;
+	}
+	//set lasteditedby
+	function setLasteditedby($lasteditedby){
+		$this->lasteditedby=$lasteditedby;
+	}
+
+	//get lasteditedon
+	function getLasteditedon(){
+		return $this->lasteditedon;
+	}
+	//set lasteditedon
+	function setLasteditedon($lasteditedon){
+		$this->lasteditedon=$lasteditedon;
+	}
+
+	function add($obj,$shop,$bool=false){
+		$generaljournalsDBO = new GeneraljournalsDBO();
+		$num=count($shop);
+		$i=0;
+		$total=0;
+		
+		//get jvno
+		if($bool){
+		$generaljournals = new Generaljournals();
+		$fields="max(jvno+1) jvno";
+		$join="";
+		$where="";
+		$having="";
+		$orderby="";
+		$groupby="";
+		$generaljournals->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+		$generaljournals=$generaljournals->fetchObject;
+		$obj->jvno=$generaljournals->jvno;
+		}
+		
+		$obj->createdby=$_SESSION['userid'];
+		$obj->createdon=date("Y-m-d H:i:s");
+		$obj->lasteditedby=$_SESSION['userid'];
+		$obj->lasteditedon=date("Y-m-d H:i:s");
+	
+		while($i<$num){
+			$obj->accountid=$shop[$i]['accountid'];
+			$obj->accountname=$shop[$i]['accountname'];
+			$obj->memo=$shop[$i]['memo'];
+			$obj->debit=$shop[$i]['debit'];
+			$obj->credit=$shop[$i]['credit'];
+			$obj->memo=$shop[$i]['memo'];
+			$obj->balance=$shop[$i]['balance'];
+			$obj->remarks=$shop[$i]['remarks'];
+			if(!empty($shop[$i]['jvno']))
+			   $obj->jvno=$shop[$i]['jvno'];
+			$obj->transactdate=$shop[$i]['transactdate'];
+			$obj->transactionid=$shop[$i]['transactionid'];
+			$obj->class=$shop[$i]['class'];
+			$obj->documentno=$shop[$i]['documentno'];
+			$obj->mode=$shop[$i]['mode'];
+			if($generaljournalsDBO->persist($obj)){		
+				//$this->id=$generaljournalsDBO->id;
+				$this->sql=$generaljournalsDBO->sql;
+			}if(empty($obj->action)){
+	$obj->transactdate=date('Y-m-d');
+
+}
+			$i++;
+		}
+		return true;	
+	}			
+	function edit($obj,$shop){
+	
+		$gn = new GeneralJournals();
+		$where=" where jvno='$obj->jvno' ";
+		$gn->delete($obj,$where);
+		
+		$gns = new GeneralJournals();
+                $gns->add($obj,$shop,true);
+		
+		return true;	
+	}			
+	function delete($obj,$where=""){			
+		$generaljournalsDBO = new GeneraljournalsDBO();
+		if(empty($where)){
+			$where=" where id='$obj->id' ";
+		}
+		if($generaljournalsDBO->delete($obj,$where))		
+			$this->sql=$generaljournalsDBO->sql;
+			return true;	
+	}			
+	function retrieve($fields,$join,$where,$having,$groupby,$orderby){			
+		$generaljournalsDBO = new GeneraljournalsDBO();
+		$this->table=$generaljournalsDBO->table;
+		$generaljournalsDBO->retrieve($fields,$join,$where,$having,$groupby,$orderby);		
+		$this->sql=$generaljournalsDBO->sql;
+		$this->result=$generaljournalsDBO->result;
+		$this->fetchObject=$generaljournalsDBO->fetchObject;
+		$this->affectedRows=$generaljournalsDBO->affectedRows;
+	}			
+	function validate($obj){
+		if($obj->crtotals!=$obj->drtotals){
+			$error="Check that the debit and credit totals tally";
+		}
+	
+		if(!empty($error))
+			return $error;
+		else
+			return null;
+	
+	}
+	
+	
+
+	function validates($obj){
+	
+	  if($obj->crtotals!=$obj->drtotals){
+			$error="Check that the debit and credit totals tally";
+		}
+	
+		if(!empty($error))
+			return $error;
+		else
+			return null;
+	
+	}
+}				
+?>

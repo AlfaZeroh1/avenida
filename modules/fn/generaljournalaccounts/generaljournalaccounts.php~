@@ -1,0 +1,115 @@
+<?php
+session_start();
+require_once("../../../DB.php");
+require_once("../../../lib.php");
+require_once("Generaljournalaccounts_class.php");
+require_once("../../auth/rules/Rules_class.php");
+
+
+if(empty($_SESSION['userid'])){;
+	redirect("../../auth/users/login.php");
+}
+
+$page_title="Generaljournalaccounts";
+//connect to db
+$db=new DB();
+//Authorization.
+$auth->roleid="756";//View
+$auth->levelid=$_SESSION['level'];
+
+auth($auth);
+include"../../../head.php";
+
+$delid=$_GET['delid'];
+$generaljournalaccounts=new Generaljournalaccounts();
+if(!empty($delid)){
+	$generaljournalaccounts->id=$delid;
+	$generaljournalaccounts->delete($generaljournalaccounts);
+	redirect("generaljournalaccounts.php");
+}
+//Authorization.
+$auth->roleid="755";//View
+$auth->levelid=$_SESSION['level'];
+
+if(existsRule($auth)){
+?>
+<div style="float:left;" class="buttons"> <input onclick="showPopWin('addgeneraljournalaccounts_proc.php',600,430);" value="Add Generaljournalaccounts " type="button"/></div>
+<?php }?>
+<table style="clear:both;"  class="tgrid display" id="example" width="98%" border="0" cellspacing="0" cellpadding="2" align="center" >
+	<thead>
+		<tr>
+			<th>#</th>
+			<th>Reference </th>
+			<th>Name </th>
+			<th>Account Type </th>
+			<th>Category </th>
+			<th>Debit </th>
+			<th>Credit </th>
+<?php
+//Authorization.
+$auth->roleid="757";//View
+$auth->levelid=$_SESSION['level'];
+
+if(existsRule($auth)){
+?>
+			<th>&nbsp;</th>
+<?php
+}
+//Authorization.
+$auth->roleid="758";//View
+$auth->levelid=$_SESSION['level'];
+
+if(existsRule($auth)){
+?>
+			<th>&nbsp;</th>
+<?php } ?>
+		</tr>
+	</thead>
+	<tbody>
+	<?php
+		$i=0;
+		$fields="fn_generaljournalaccounts.id, fn_generaljournalaccounts.refid, fn_generaljournalaccounts.name, sys_acctypes.name as acctypeid, gna.name as categoryid, fn_generaljournalaccounts.debit, fn_generaljournalaccounts.credit, fn_generaljournalaccounts.createdby, fn_generaljournalaccounts.createdon, fn_generaljournalaccounts.lasteditedby, fn_generaljournalaccounts.lasteditedon";
+		$join=" left join sys_acctypes on fn_generaljournalaccounts.acctypeid=sys_acctypes.id  left join fn_generaljournalaccounts gna on fn_generaljournalaccounts.categoryid=gna.id ";
+		$having="";
+		$groupby="";
+		$orderby="";
+		$generaljournalaccounts->retrieve($fields,$join,$where,$having,$groupby,$orderby);echo mysql_error();
+		$res=$generaljournalaccounts->result;
+		while($row=mysql_fetch_object($res)){
+		$i++;
+	?>
+		<tr>
+			<td><?php echo $i; ?></td>
+			<td><?php echo $row->refid; ?></td>
+			<td><?php echo $row->name; ?></td>
+			<td><?php echo $row->acctypeid; ?></td>
+			<td><?php echo $row->categoryid; ?></td>
+			<td><?php echo formatNumber($row->debit); ?></td>
+			<td><?php echo formatNumber($row->credit); ?></td>
+<?php
+//Authorization.
+$auth->roleid="757";//View
+$auth->levelid=$_SESSION['level'];
+
+if(existsRule($auth)){
+?>
+			<td><a href="javascript:;" onclick="showPopWin('addgeneraljournalaccounts_proc.php?id=<?php echo $row->id; ?>',600,430);">View</a></td>
+<?php
+}
+//Authorization.
+$auth->roleid="758";//View
+$auth->levelid=$_SESSION['level'];
+
+if(existsRule($auth)){
+?>
+			<td><a href='generaljournalaccounts.php?delid=<?php echo $row->id; ?>' onclick="return confirm('Are you sure you want to delete?')">Delete</a></td>
+<?php } ?>
+		</tr>
+	<?php 
+	}
+	?>
+	</tbody>
+</table>
+<?php
+include"../../../foot.php";
+?>

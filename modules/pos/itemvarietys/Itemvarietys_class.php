@@ -1,0 +1,181 @@
+<?php 
+require_once("ItemvarietysDBO.php");
+class Itemvarietys
+{				
+	var $id;			
+	var $itemid;			
+	var $varietyid;			
+	var $quantity;			
+	var $remarks;			
+	var $ipaddress;			
+	var $createdby;			
+	var $createdon;			
+	var $lasteditedby;			
+	var $lasteditedon;			
+	var $itemvarietysDBO;
+	var $fetchObject;
+	var $sql;
+	var $result;
+	var $table;
+	var $affectedRows;
+
+	function setObject($obj){
+		$this->id=str_replace("'","\'",$obj->id);
+		if(empty($obj->itemid))
+			$obj->itemid='NULL';
+		$this->itemid=$obj->itemid;
+		if(empty($obj->varietyid))
+			$obj->varietyid='NULL';
+		$this->varietyid=$obj->varietyid;
+		$this->quantity=str_replace("'","\'",$obj->quantity);
+		$this->remarks=str_replace("'","\'",$obj->remarks);
+		$this->ipaddress=str_replace("'","\'",$obj->ipaddress);
+		$this->createdby=str_replace("'","\'",$obj->createdby);
+		$this->createdon=str_replace("'","\'",$obj->createdon);
+		$this->lasteditedby=str_replace("'","\'",$obj->lasteditedby);
+		$this->lasteditedon=str_replace("'","\'",$obj->lasteditedon);
+		return $this;
+	
+	}
+	//get id
+	function getId(){
+		return $this->id;
+	}
+	//set id
+	function setId($id){
+		$this->id=$id;
+	}
+
+	//get itemid
+	function getItemid(){
+		return $this->itemid;
+	}
+	//set itemid
+	function setItemid($itemid){
+		$this->itemid=$itemid;
+	}
+
+	//get varietyid
+	function getVarietyid(){
+		return $this->varietyid;
+	}
+	//set varietyid
+	function setVarietyid($varietyid){
+		$this->varietyid=$varietyid;
+	}
+
+	//get quantity
+	function getQuantity(){
+		return $this->quantity;
+	}
+	//set quantity
+	function setQuantity($quantity){
+		$this->quantity=$quantity;
+	}
+
+	//get remarks
+	function getRemarks(){
+		return $this->remarks;
+	}
+	//set remarks
+	function setRemarks($remarks){
+		$this->remarks=$remarks;
+	}
+
+	//get ipaddress
+	function getIpaddress(){
+		return $this->ipaddress;
+	}
+	//set ipaddress
+	function setIpaddress($ipaddress){
+		$this->ipaddress=$ipaddress;
+	}
+
+	//get createdby
+	function getCreatedby(){
+		return $this->createdby;
+	}
+	//set createdby
+	function setCreatedby($createdby){
+		$this->createdby=$createdby;
+	}
+
+	//get createdon
+	function getCreatedon(){
+		return $this->createdon;
+	}
+	//set createdon
+	function setCreatedon($createdon){
+		$this->createdon=$createdon;
+	}
+
+	//get lasteditedby
+	function getLasteditedby(){
+		return $this->lasteditedby;
+	}
+	//set lasteditedby
+	function setLasteditedby($lasteditedby){
+		$this->lasteditedby=$lasteditedby;
+	}
+
+	//get lasteditedon
+	function getLasteditedon(){
+		return $this->lasteditedon;
+	}
+	//set lasteditedon
+	function setLasteditedon($lasteditedon){
+		$this->lasteditedon=$lasteditedon;
+	}
+
+	function add($obj){
+		$itemvarietysDBO = new ItemvarietysDBO();
+		if($itemvarietysDBO->persist($obj)){
+			$this->id=$itemvarietysDBO->id;
+			$this->sql=$itemvarietysDBO->sql;
+			return true;	
+		}
+	}			
+	function edit($obj,$where=""){
+		$itemvarietysDBO = new ItemvarietysDBO();
+		if($itemvarietysDBO->update($obj,$where)){
+			$this->sql=$itemvarietysDBO->sql;
+		}
+			return true;	
+	}			
+	function delete($obj,$where=""){			
+		$itemvarietysDBO = new ItemvarietysDBO();
+		if($itemvarietysDBO->delete($obj,$where=""))		
+			$this->sql=$itemvarietysDBO->sql;
+			return true;	
+	}			
+	function retrieve($fields,$join,$where,$having,$groupby,$orderby){			
+		$itemvarietysDBO = new ItemvarietysDBO();
+		$this->table=$itemvarietysDBO->table;
+		$itemvarietysDBO->retrieve($fields,$join,$where,$having,$groupby,$orderby);		
+		$this->sql=$itemvarietysDBO->sql;
+		$this->result=$itemvarietysDBO->result;
+		$this->fetchObject=$itemvarietysDBO->fetchObject;
+		$this->affectedRows=$itemvarietysDBO->affectedRows;
+	}			
+	function validate($obj){
+		if(empty($obj->itemid)){
+			$error="Product should be provided";
+		}
+		else if(empty($obj->varietyid)){
+			$error="Variety should be provided";
+		}
+	
+		if(!empty($error))
+			return $error;
+		else
+			return null;
+	
+	}
+
+	function validates($obj){
+	
+			return null;
+	
+	}
+}				
+?>

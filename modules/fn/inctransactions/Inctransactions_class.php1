@@ -1,0 +1,564 @@
+<?php 
+require_once("InctransactionsDBO.php");
+class Inctransactions
+{				
+	var $id;			
+	var $incomeid;	
+	var $paymentid;
+	var $plotid;			
+	var $paymenttermid;			
+	var $customerid;			
+	var $quantity;			
+	var $tax;			
+	var $discount;			
+	var $amount;			
+	var $total;			
+	var $incomedate;			
+	var $paid;			
+	var $month;
+	var $year;
+	var $remarks;			
+	var $memo;			
+	var $documentno;
+	var $paymentmodeid;			
+	var $bankid;			
+	var $imprestaccountid;			
+	var $chequeno;			
+	var $ipaddress;			
+	var $createdby;			
+	var $createdon;			
+	var $lasteditedby;			
+	var $lasteditedon;			
+	var $inctransactionsDBO;
+	var $fetchObject;
+	var $sql;
+	var $result;
+	var $table;
+	var $affectedRows;
+
+	function setObject($obj){
+		$this->id=str_replace("'","\'",$obj->id);
+		if(empty($obj->incomeid))
+			$obj->incomeid='NULL';
+		$this->incomeid=$obj->incomeid;
+		if(empty($obj->paymentid))
+			$obj->paymentid='NULL';
+		$this->paymentid=$obj->paymentid;
+		if(empty($obj->plotid))
+			$obj->plotid='NULL';
+		$this->plotid=$obj->plotid;
+		if(empty($obj->paymenttermid))
+			$obj->paymenttermid='NULL';
+		$this->paymenttermid=$obj->paymenttermid;
+		if(empty($obj->customerid))
+			$obj->customerid='NULL';
+		$this->customerid=$obj->customerid;
+		if(empty($obj->purchasemodeid))
+			$obj->purchasemodeid='NULL';
+		$this->purchasemodeid=$obj->purchasemodeid;
+		$this->quantity=str_replace("'","\'",$obj->quantity);
+		$this->tax=str_replace("'","\'",$obj->tax);
+		$this->discount=str_replace("'","\'",$obj->discount);
+		$this->amount=str_replace("'","\'",$obj->amount);
+		$this->total=str_replace("'","\'",$obj->total);
+		$this->incomedate=str_replace("'","\'",$obj->incomedate);
+		$this->paid=str_replace("'","\'",$obj->paid);
+		$this->month=str_replace("'","\'",$obj->month);
+		$this->year=str_replace("'","\'",$obj->year);
+		$this->remarks=str_replace("'","\'",$obj->remarks);
+		$this->memo=str_replace("'","\'",$obj->memo);
+		$this->documentno=str_replace("'","\'",$obj->documentno);
+		$this->voucherno=str_replace("'","\'",$obj->voucherno);
+		if(empty($obj->paymentmodeid))
+			$obj->paymentmodeid='NULL';
+		$this->paymentmodeid=$obj->paymentmodeid;
+		if(empty($obj->bankid))
+			$obj->bankid='NULL';
+		$this->bankid=$obj->bankid;
+		if(empty($obj->imprestaccountid))
+			$obj->imprestaccountid='NULL';
+		$this->imprestaccountid=$obj->imprestaccountid;
+		$this->chequeno=str_replace("'","\'",$obj->chequeno);
+		$this->ipaddress=str_replace("'","\'",$obj->ipaddress);
+		$this->createdby=str_replace("'","\'",$obj->createdby);
+		$this->createdon=str_replace("'","\'",$obj->createdon);
+		$this->lasteditedby=str_replace("'","\'",$obj->lasteditedby);
+		$this->lasteditedon=str_replace("'","\'",$obj->lasteditedon);
+		return $this;
+	
+	}
+	//get id
+	function getId(){
+		return $this->id;
+	}
+	//set id
+	function setId($id){
+		$this->id=$id;
+	}
+
+	//get incomeid
+	function getIncomeid(){
+		return $this->incomeid;
+	}
+	//set incomeid
+	function setIncomeid($incomeid){
+		$this->incomeid=$incomeid;
+	}
+	
+	//get paymentid
+	function getPaymentid(){
+		return $this->paymentid;
+	}
+	//set paymentid
+	function setPaymentid($paymentid){
+		$this->paymentid=$paymentid;
+	}
+
+	//get plotid
+	function getPlotid(){
+		return $this->plotid;
+	}
+	//set plotid
+	function setPlotid($plotid){
+		$this->plotid=$plotid;
+	}
+
+	//get paymenttermid
+	function getPaymenttermid(){
+		return $this->paymenttermid;
+	}
+	//set paymenttermid
+	function setPaymenttermid($paymenttermid){
+		$this->paymenttermid=$paymenttermid;
+	}
+
+	//get customerid
+	function getCustomerid(){
+		return $this->customerid;
+	}
+	//set customerid
+	function setCustomerid($customerid){
+		$this->customerid=$customerid;
+	}
+
+	//get purchasemodeid
+	function getPurchasemodeid(){
+		return $this->purchasemodeid;
+	}
+	//set purchasemodeid
+	function setPurchasemodeid($purchasemodeid){
+		$this->purchasemodeid=$purchasemodeid;
+	}
+
+	//get quantity
+	function getQuantity(){
+		return $this->quantity;
+	}
+	//set quantity
+	function setQuantity($quantity){
+		$this->quantity=$quantity;
+	}
+
+	//get tax
+	function getTax(){
+		return $this->tax;
+	}
+	//set tax
+	function setTax($tax){
+		$this->tax=$tax;
+	}
+
+	//get discount
+	function getDiscount(){
+		return $this->discount;
+	}
+	//set discount
+	function setDiscount($discount){
+		$this->discount=$discount;
+	}
+
+	//get amount
+	function getAmount(){
+		return $this->amount;
+	}
+	//set amount
+	function setAmount($amount){
+		$this->amount=$amount;
+	}
+
+	//get total
+	function getTotal(){
+		return $this->total;
+	}
+	//set total
+	function setTotal($total){
+		$this->total=$total;
+	}
+
+	//get incomedate
+	function getIncomedate(){
+		return $this->incomedate;
+	}
+	//set incomedate
+	function setIncomedate($incomedate){
+		$this->incomedate=$incomedate;
+	}
+
+	//get paid
+	function getPaid(){
+		return $this->paid;
+	}
+	//set paid
+	function setPaid($paid){
+		$this->paid=$paid;
+	}
+
+	//get remarks
+	function getRemarks(){
+		return $this->remarks;
+	}
+	//set remarks
+	function setRemarks($remarks){
+		$this->remarks=$remarks;
+	}
+
+	//get memo
+	function getMemo(){
+		return $this->memo;
+	}
+	//set memo
+	function setMemo($memo){
+		$this->memo=$memo;
+	}
+
+	//get documentno
+	function getDocumentno(){
+		return $this->documentno;
+	}
+	//set documentno
+	function setDocumentno($documentno){
+		$this->documentno=$documentno;
+	}
+
+	//get paymentmodeid
+	function getPaymentmodeid(){
+		return $this->paymentmodeid;
+	}
+	//set paymentmodeid
+	function setPaymentmodeid($paymentmodeid){
+		$this->paymentmodeid=$paymentmodeid;
+	}
+
+	//get bankid
+	function getBankid(){
+		return $this->bankid;
+	}
+	//set bankid
+	function setBankid($bankid){
+		$this->bankid=$bankid;
+	}
+
+	//get imprestaccountid
+	function getImprestaccountid(){
+		return $this->imprestaccountid;
+	}
+	//set imprestaccountid
+	function setImprestaccountid($imprestaccountid){
+		$this->imprestaccountid=$imprestaccountid;
+	}
+
+	//get chequeno
+	function getChequeno(){
+		return $this->chequeno;
+	}
+	//set chequeno
+	function setChequeno($chequeno){
+		$this->chequeno=$chequeno;
+	}
+
+	//get ipaddress
+	function getIpaddress(){
+		return $this->ipaddress;
+	}
+	//set ipaddress
+	function setIpaddress($ipaddress){
+		$this->ipaddress=$ipaddress;
+	}
+
+	//get createdby
+	function getCreatedby(){
+		return $this->createdby;
+	}
+	//set createdby
+	function setCreatedby($createdby){
+		$this->createdby=$createdby;
+	}
+
+	//get createdon
+	function getCreatedon(){
+		return $this->createdon;
+	}
+	//set createdon
+	function setCreatedon($createdon){
+		$this->createdon=$createdon;
+	}
+
+	//get lasteditedby
+	function getLasteditedby(){
+		return $this->lasteditedby;
+	}
+	//set lasteditedby
+	function setLasteditedby($lasteditedby){
+		$this->lasteditedby=$lasteditedby;
+	}
+
+	//get lasteditedon
+	function getLasteditedon(){
+		return $this->lasteditedon;
+	}
+	//set lasteditedon
+	function setLasteditedon($lasteditedon){
+		$this->lasteditedon=$lasteditedon;
+	}
+
+	function add($obj,$shop){
+		$inctransactionsDBO = new InctransactionsDBO();
+		$num=count($shop);
+		$i=0;
+		$total=0;
+		$it=0;
+		/*$rw = mysql_fetch_object(mysql_query("select (max(voucherno)+1) voucherno from fn_inctransactions"));
+		if(empty($rw->voucherno))
+		  $rw->voucherno=1;
+		$obj->voucherno=$rw->voucherno;*/
+		
+		//Get transaction Identity
+		$transaction = new Transactions();
+		$fields="*";
+		$where=" where lower(replace(name,' ',''))='Incomes'";
+		$join="";
+		$having="";
+		$groupby="";
+		$orderby="";
+		$transaction->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+		$transaction=$transaction->fetchObject;
+		$it=0;
+		$shplandlordreceipts=array();
+		
+		$obj->transactdate=$obj->incomedate;
+		
+		while($i<$num){
+			$obj->incomeid=$shop[$i]['incomeid'];
+			$obj->paymentid=$shop[$i]['paymentid'];
+// 			$obj->plotid=$shop[$i]['plotid'];
+			$obj->paymenttermid=$shop[$i]['paymenttermid'];
+			$obj->month=$shop[$i]['month'];
+			$obj->year=$shop[$i]['year'];
+			$obj->incomename=$shop[$i]['incomename'];
+			$obj->quantity=$shop[$i]['quantity'];
+			$obj->tax=$shop[$i]['tax'];
+			$obj->discount=$shop[$i]['discount'];
+			$obj->amount=$shop[$i]['amount'];
+			$obj->memo=$shop[$i]['memo'];
+			$obj->total = $shop[$i]['total'];
+			$total+=$obj->total;
+			
+			$inctransactions = new Inctransactions();
+			$inctransactions = $inctransactions->setObject($obj);
+			if($inctransactionsDBO->persist($inctransactions)){		
+				//$this->id=$inctransactionsDBO->id;
+				$this->sql=$inctransactionsDBO->sql;
+				
+				
+				
+				//retrieve account to credit
+				if(!empty($obj->paymentid)){
+				  
+				  $payments = new Payments();
+				  $fields="*";
+				  $where=" where id='$obj->paymentid'";
+				  $join="";
+				  $having="";
+				  $groupby="";
+				  $orderby="";
+				  $payments->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+				  $payments=$payments->fetchObject;
+				  
+				  $generaljournalaccounts->id=$payments->accountid;
+				  
+				}
+				else{
+				  $generaljournalaccounts = new Generaljournalaccounts();
+				  $fields="*";
+				  $where=" where refid='$obj->incomeid' and acctypeid='1'";
+				  $join="";
+				  $having="";
+				  $groupby="";
+				  $orderby="";
+				  $generaljournalaccounts->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+				  $generaljournalaccounts=$generaljournalaccounts->fetchObject;
+				  $ob->remarks="Payment for $obj->incomename ";
+				}
+				
+				//make credit entry
+				$generaljournal = new Generaljournals();
+				$ob->tid=$tenantpayments->id;
+				$ob->documentno="$obj->documentno";
+				$ob->memo=$obj->memo;
+				$ob->accountid=$generaljournalaccounts->id;
+				$ob->daccountid=$generaljournalaccounts2->id;
+				$ob->transactionid=$transaction->id;
+				$ob->mode=$obj->paymentmodeid;
+				$ob->debit=0;
+				$ob->credit=$obj->total;
+				
+				$ob->class="B";
+				$generaljournal->setObject($ob);
+				//$generaljournal->add($generaljournal);
+				
+				$shpgeneraljournals[$it]=array('accountid'=>"$generaljournal->accountid", 'accountname'=>"$generaljournalaccounts->name", 'documentno'=>"$generaljournal->documentno", 'remarks'=>"$generaljournal->remarks", 'class'=>"B", 'memo'=>"$generaljournal->memo", 'debit'=>"$generaljournal->debit", 'credit'=>"$generaljournal->credit", 'total'=>"$generaljournal->total",'transactdate'=>"$obj->incomedate",'class'=>"$generaljournal->class",'transactionid'=>"$generaljournal->transactionid");
+				
+				$it++;		
+			}
+			$i++;
+		}
+
+		
+		if(!empty($obj->plotid) and $obj->plotid!=NULL and $obj->plotid!='NULL'){echo "Here1";
+		  $plots = new Plots();
+		  $fields="*";
+		  $where=" where id='$obj->plotid'";
+		  $join="";
+		  $having="";
+		  $groupby="";
+		  $orderby="";
+		  $plots->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+		  $plots=$plots->fetchObject;
+		  
+		  //retrieve account to debit
+		  $generaljournalaccounts = new Generaljournalaccounts();
+		  $fields="*";
+		  $where=" where refid='$plots->landlordid' and acctypeid='33'";
+		  $join="";
+		  $having="";
+		  $groupby="";
+		  $orderby="";
+		  $generaljournalaccounts->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+		  $generaljournalaccounts2=$generaljournalaccounts->fetchObject;
+		  $ob->remarks="$obj->incomename for $plots->name in ".getMonth($obj->month)." ".$obj->year;
+		}
+		else{
+		 
+		  $paymentmodes = new Paymentmodes();
+		    $fields="*";
+		    $join="";
+		    $having="";
+		    $groupby="";
+		    $orderby="";
+		    $where=" where id='$obj->paymentmodeid' ";
+		    $paymentmodes->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+		    $paymentmodes=$paymentmodes->fetchObject;
+		  
+		    if(!empty($obj->imprestaccountid) and !is_null($obj->imprestaccountid) and $obj->imprestaccountid>0)
+		      $obj->bankid=$obj->imprestaccountid;
+		      
+		    if(empty($obj->bankid) or is_null($obj->bankid) or $obj->bankid=="NULL"){
+			    $obj->bankid=1;
+		    }
+		    
+		    if($obj->paymentmodeid==1)
+			$obj->bankid=1;
+		  
+				  //retrieve account to credit
+		  $generaljournalaccounts2 = new Generaljournalaccounts();
+		  $fields="*";
+		  $where=" where refid='$obj->bankid' and acctypeid='$paymentmodes->acctypeid'";
+		  $join="";
+		  $having="";
+		  $groupby="";
+		  $orderby="";
+		  $generaljournalaccounts2->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+		  $generaljournalaccounts2=$generaljournalaccounts2->fetchObject;
+		  
+		}	
+
+		$ob->transactdate=$obj->incomedate;
+
+				
+				//make credit entry
+		$generaljournal2 = new Generaljournals();
+		$ob->tid=$inctransactions->id;
+		$ob->documentno=$obj->documentno;
+		$ob->remarks="Incomes on Voucher No $obj->documentno";
+		$ob->memo=$inctransactions->remarks;
+		$ob->daccountid=$generaljournalaccounts->id;
+		$ob->accountid=$generaljournalaccounts2->id;
+		$ob->transactionid=$transaction->id;
+		$ob->mode="credit";
+		$ob->debit=$total;
+		$ob->credit=0;
+		$ob->did=$generaljournal->id;
+		$generaljournal2->setObject($ob);
+		
+		$shpgeneraljournals[$it]=array('accountid'=>"$generaljournal2->accountid", 'accountname'=>"$generaljournalaccounts2->name",  'documentno'=>"$generaljournal2->documentno", 'class'=>"B", 'remarks'=>"$generaljournal2->remarks", 'memo'=>"$generaljournal2->memo", 'debit'=>"$generaljournal2->debit", 'credit'=>"$generaljournal2->credit", 'total'=>"$generaljournal2->total",'transactdate'=>"$obj->incomedate",'class'=>"$generaljournal->class",'transactionid'=>"$generaljournal2->transactionid");
+			
+		$gn = new Generaljournals();
+		$gn->add($obj, $shpgeneraljournals);
+
+		return true;	
+	}			
+	function edit($obj,$where="",$shop){
+		$inctransactionsDBO = new InctransactionsDBO();
+
+		//first delete all records under old documentno
+		$where=" where documentno='$obj->documentno'";
+		$inctransactionsDBO->delete($obj,$where);
+
+		$transaction = new Transactions();
+		$fields="*";
+		$where=" where lower(replace(name,' ',''))='Incomes'";
+		$join="";
+		$having="";
+		$groupby="";
+		$orderby="";
+		$transaction->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+		$transaction=$transaction->fetchObject;
+		
+		$gn = new GeneralJournals();
+		$where=" where documentno='$obj->documentno' and transactionid='$transaction->id' ";
+		$gn->delete($obj,$where);
+		
+		$inctransactions = new Inctransactions();
+
+		$inctransactions->add($obj,$shop);
+
+		return true;	
+	}			
+	function delete($obj,$where=""){			
+		$inctransactionsDBO = new InctransactionsDBO();
+		if($inctransactionsDBO->delete($obj,$where=""))		
+			$this->sql=$inctransactionsDBO->sql;
+			return true;	
+	}			
+	function retrieve($fields,$join,$where,$having,$groupby,$orderby){			
+		$inctransactionsDBO = new InctransactionsDBO();
+		$this->table=$inctransactionsDBO->table;
+		$inctransactionsDBO->retrieve($fields,$join,$where,$having,$groupby,$orderby);		
+		$this->sql=$inctransactionsDBO->sql;
+		$this->result=$inctransactionsDBO->result;
+		$this->fetchObject=$inctransactionsDBO->fetchObject;
+		$this->affectedRows=$inctransactionsDBO->affectedRows;
+	}			
+	function validate($obj){
+	
+			return null;
+	
+	}
+
+	function validates($obj){
+	
+			return null;
+	
+	}
+}				
+?>

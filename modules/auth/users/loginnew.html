@@ -1,0 +1,231 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="../../../css/jquery-ui-1.10.3.custom.css" rel="stylesheet">
+    <link href="../../../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../../../css/buttons.bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="../../../css/fixedColumns.dataTables.min.css" rel="stylesheet">
+    <link href="../../../css/style.css" rel="stylesheet">
+    <link href="../../../css/signin.css" rel="stylesheet">
+    <link href="../../../css/elements.css" rel="stylesheet">
+    <link href="../../../css/sb-admin.css" rel="stylesheet">    
+    <link href="../../../css/dataTables.bootstrap.min.css" rel="stylesheet">
+    <link href="../../../css/buttons.dataTables.min.css" rel="stylesheet">
+    
+
+    <!-- Custom Fonts -->
+    <link href="../../../font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    
+    <!-- jQuery -->
+    <script src="../../../js/jquery.js"></script>
+    <script src="../../../js/jquery-ui.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="../../../js/bootstrap.min.js"></script>
+
+    <!-- Morris Charts JavaScript -->
+    <script src="../../../js/jquery.dataTables.min.js"></script>
+    <script src="../../../js/dataTables.bootstrap.min.js"></script>
+    <script src="../../../js/dataTables.buttons.min.js"></script> 
+    <script src="../../../js/buttons.flash.min.js"></script> 
+    <script src="../../../js/jszip.min.js"></script>
+    <script src="../../../js/pdfmake.min.js"></script>
+    <script src="../../../js/vfs_fonts.js"></script>
+    <script src="../../../js/buttons.html5.min.js"></script>  
+    <script src="../../../js/buttons.print.min.js"></script>
+    <script src="../../../js/buttons.colVis.min.js"></script>
+    <script src="../../../js/jquery.formatCurrency.js"></script>
+    <script src="../../../js/dataTables.fixedColumns.min.js"></script>
+    <script src="../../../js/womon.js"></script>
+    
+    <script type="text/javascript">
+    $(document).ready(function() {
+	$('#example').DataTable({
+	  "scrollX": true,
+	});
+	
+	$(document).ready(function() {
+	    $('table.display').DataTable({
+	      "scrollX": true,
+	    });
+	} );
+	
+	$('input[type=text]').addClass('form-control');
+	$('textarea').addClass('form-control');
+	$('select').addClass('form-control');
+	/*
+	$('.date_input').datepicker({
+	    format: 'mm/dd/yyyy',
+	    startDate: '-3d'
+	});*/
+	
+    } );
+    
+    
+    </script>
+    
+    <style type="text/css">
+    $(".form-control").removeAttr("width");
+    $(".form-control").removeAttr("background-color");
+    .side-nav{
+      background-color:;
+    }
+    
+    
+    </style>
+<script language="javascript" type="text/javascript">
+var newwindow;
+function poptastic(url,h,w)
+{
+	var ht=h;
+	var wd=w;
+	newwindow=window.open(url,'name','height='+ht+',width='+wd+',scrollbars=yes,left=250,top=150');
+	if (window.focus) {newwindow.focus()}
+}
+function placeCursorOnPageLoad()
+{
+	document.login.username.focus();
+		
+}
+</script>
+
+<title>WiseDigits</title>
+<?php
+$page_title = 'Login';
+?>
+<body onload="placeCursorOnPageLoad();loadBanks();">
+
+  <?php
+if(!empty($levelerror))
+{
+?>
+  <script type="text/javascript" language="javascript1.1">
+alert("<?php echo $levelerror; ?>");
+</script>
+  <?
+}
+?>
+  
+<div class="container">
+      <!-- Start Horizontal Div -->
+            <div class="row vertical-center-row"> 
+              
+                    <div class="col-md-8 col-md-offset-2" >
+                        <div class="panel panel-primary">
+                        
+                            <div class="panel-heading headdiv">
+                                <div class="left">
+                                    <strong><label style=" font-family: cursive" class="h5"><label style=" font-family:  'Adobe Fangsong Std R'" class="h4 center">
+                                      <?php echo $_SESSION['companyname']; ?>
+                                    </label></label></strong>
+                                </div>
+                                <div class="left">
+                                  <p style="width:500px;margin-left:20px;">Copyright &copy;<?php echo date(Y); ?> WiseDigits. All Rights Reserved.</p>
+<!--                                   <img id="footer-img" src="../../fsimage/co-logo.png"> -->
+                                </div>
+                            </div>
+
+                            <div class="panel-body">
+                                <div class="row">
+                                  <div class="col-md-4">  
+                                      <img width="200px" height="200px" src="../../../images/<?php echo $_SESSION['logo']; ?>">
+                                  </div>
+                                  <div class="col-md-8">
+                                    <form class="form-signin" method="post" action="login.php" name="login">
+				    
+				    <input type="hidden" name="doctor" id="doctor" value="<?php echo $obj->doctor; ?>"/>
+				    
+				    <?php if(empty($obj->doctor)){?>
+				    <h2 class="form-signin-heading">Sign in</h2>
+				    <br/>
+				      <label for="inputEmail" class="sr-only">Username</label>
+				      <input type="username" name="username" id="username" class="form-control" placeholder="Username" required autofocus><br/>
+				      <label for="inputPassword" class="sr-only">Password</label>
+				      <input type="password" id="password" name="password" class="form-control" placeholder="Password" required>       
+				      <input class="btn btn-lg btn-primary btn-block" name="action" type="submit" value="Login"/>
+				    
+				    <?php }else{ ?>
+				   <h3 class="form-signin-heading">Consultation Room:</h3>
+				    <table class="table">
+				      <tr><td><select name="consultationroomid" class="selectbox">
+					    <option value="">Select...</option>
+					    <?php 
+					    $consultationrooms = new Consultationrooms();
+					    $fields=" * ";
+					    $join="";
+					    $having="";
+					    $groupby="";
+					    $orderby="";
+					    $where="";
+					    $consultationrooms->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+					    while ($row=mysql_fetch_object($consultationrooms->result)){
+					    ?>
+						    <option value="<?php echo $row->id; ?>" <?php if($obj->consultationroomid==$row->id){echo"selected";}?>><?php echo $row->name; ?></option>
+					    <?php 
+					    }
+					    ?>
+				    </select></td><tr>
+				    <tr>
+				    <td></td><td>  
+				    <input class="btn btn-lg btn-primary btn-block" name="action" type="submit" value="Proceed"/></td></tr>
+				    </table>
+				    
+				  
+				    
+				    <?php } ?>
+				  </form>
+                                  </div>
+                                  
+                                  <div class="col-md-2"></div>
+                                </div>
+      </div>
+                  <div class="panel-footer">
+			    <div class="panel panel-default">
+				  <div class="row">
+						<div class="col-lg-4">
+						  <div class="panel-heading">
+						  <b>Address</b></br>
+						    <?php echo $_SESSION['companyaddr']; ?>
+						  </div>
+						</div>
+						
+						<div class="col-lg-4">
+						  <div class="panel-heading">
+						  <b>Details</b></br>
+						    <?php echo $_SESSION['companydesc']; ?>
+						  </div>
+						</div>
+						
+						<div class="col-lg-4">
+						  <div class="panel-heading" >
+						  <b>Location</b></br>
+						     <ul>
+						      <li><?php echo $_SESSION['companytown']; ?></li>
+						      <li><?php echo $_SESSION['companytel']; ?></li>
+						     </ul>
+						  </div>
+						</div>
+				</div>
+			    </div>					
+                  </div>
+                  </div>
+                  </div>
+              </div>
+           </div>
+</div>
+</body>
+</html>
+<?php 
+if(!empty($error)){
+  showError($error);
+}
+?>

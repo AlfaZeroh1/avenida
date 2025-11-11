@@ -1,0 +1,221 @@
+<?php 
+session_start();
+require_once("../../../DB.php");
+require_once("../../../lib.php");
+require_once("Suppliers_class.php");
+require_once("../../auth/rules/Rules_class.php");
+
+
+if(empty($_SESSION['userid'])){;
+	redirect("../../auth/users/login.php");
+}
+
+require_once("../../proc/suppliercategorys/Suppliercategorys_class.php");
+require_once("../../sys/regions/Regions_class.php");
+require_once("../../sys/subregions/Subregions_class.php");
+require_once("../../fn/generaljournalaccounts/Generaljournalaccounts_class.php");
+require_once("../../sys/currencys/Currencys_class.php");
+require_once("../../crm/countrys/Countrys_class.php");
+
+//Authorization.
+if(!empty($_GET['id'])){
+	$auth->roleid="8085";//Edit
+}
+else{
+	$auth->roleid="8083";//Add
+}
+$auth->levelid=$_SESSION['level'];
+auth($auth);
+
+
+//connect to db
+$db=new DB();
+$obj=(object)$_POST;
+$ob=(object)$_GET;
+
+$mode=$_GET['mode'];
+if(!empty($mode)){
+	$obj->mode=$mode;
+}
+$id=$_GET['id'];
+$error=$_GET['error'];
+if(!empty($_GET['retrieve'])){
+	$obj->retrieve=$_GET['retrieve'];
+}
+	
+	
+if($obj->action=="Save"){
+	$suppliers=new Suppliers();
+	$obj->createdby=$_SESSION['userid'];
+	$obj->createdon=date("Y-m-d H:i:s");
+	$obj->lasteditedby=$_SESSION['userid'];
+	$obj->lasteditedon=date("Y-m-d H:i:s");
+	$obj->ipaddress=$_SERVER['REMOTE_ADDR'];
+	$error=$suppliers->validate($obj);
+	if(!empty($error)){
+		$error=$error;
+	}
+	else{
+		$suppliers=$suppliers->setObject($obj);
+		if($suppliers->add($suppliers)){
+
+			$gna = new Generaljournalaccounts();
+			$fields="*";
+			$join="";
+			$having="";
+			$groupby="";
+			$orderby="";
+			$where=" where (refid='' or refid is null) and acctypeid=30 and currencyid='$obj->currencyid'";
+			$gna->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+			$gna = $gna->fetchObject;
+			
+			$obj->categoryid=$gna->id;
+			  
+			//adding general journal account(s)
+			$name=$obj->name;
+			$obj->name=$name;
+			$obj->id="";
+			$generaljournalaccounts = new Generaljournalaccounts();
+			$obj->refid=$suppliers->id;
+			$obj->acctypeid=30;
+			$generaljournalaccounts->setObject($obj);
+			$generaljournalaccounts->add($generaljournalaccounts);
+
+			$error=SUCCESS;
+			redirect("addsuppliers_proc.php?id=".$suppliers->id."&error=".$error);
+		}
+		else{
+			$error=FAILURE;
+		}
+	}
+}
+	
+if($obj->action=="Update"){
+	$suppliers=new Suppliers();
+	$obj->lasteditedby=$_SESSION['userid'];
+	$obj->lasteditedon=date("Y-m-d H:i:s");
+
+	$error=$suppliers->validate($obj);
+	if(!empty($error)){
+		$error=$error;
+	}
+	else{
+		$suppliers=$suppliers->setObject($obj);
+		if($suppliers->edit($suppliers)){
+
+			
+			$gna = new Generaljournalaccounts();
+			$fields="*";
+			$join="";
+			$having="";
+			$groupby="";
+			$orderby="";
+			$where=" where (refid='' or refid is null) and acctypeid=30 and currencyid='$obj->currencyid'";
+			$gna->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+			$gna = $gna->fetchObject;
+			
+			$obj->categoryid=$gna->id;
+			
+			$gna2 = new Generaljournalaccounts();
+			$fields="*";
+			$join="";
+			$having="";
+			$groupby="";
+			$orderby="";
+			$where=" where refid='$suppliers->id' and acctypeid=30";
+			$gna2->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+						
+			//updating corresponding general journal account
+			$name=$obj->name;
+			$obj->name=$name;
+			$obj->id="";
+			$generaljournalaccounts = new Generaljournalaccounts();
+			$obj->refid=$suppliers->id;
+			$obj->acctypeid=30;
+			$obj->id="";
+			if($gna2->affectedRows>0){
+			  $gna2 = $gna2->fetchObject;
+			  $obj->id=$gna2->id;
+			  $generaljournalaccounts = $generaljournalaccounts->setObject($obj);
+			  $generaljournalaccounts->edit($generaljournalaccounts);
+			}else{			  
+			  
+			  $generaljournalaccounts = $generaljournalaccounts->setObject($obj);
+			  $generaljournalaccounts->add($generaljournalaccounts);
+			}
+
+			$error=UPDATESUCCESS;
+			//redirect("addsuppliers_proc.php?id=".$suppliers->id."&error=".$error);
+		}
+		else{
+			$error=UPDATEFAILURE;
+		}
+	}
+}
+if(empty($obj->action)){
+
+	$suppliercategorys= new Suppliercategorys();
+	$fields="proc_suppliercategorys.id, proc_suppliercategorys.name, proc_suppliercategorys.remarks, proc_suppliercategorys.createdby, proc_suppliercategorys.createdon, proc_suppliercategorys.lasteditedby, proc_suppliercategorys.lasteditedon";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$suppliercategorys->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+
+	$regions= new Regions();
+	$fields="sys_regions.id, sys_regions.name, sys_regions.remarks, sys_regions.ipaddress, sys_regions.createdby, sys_regions.createdon, sys_regions.lasteditedby, sys_regions.lasteditedon";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$regions->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+	
+	$countrys= new Countrys();
+	$fields="*";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$countrys->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+
+	$subregions= new Subregions();
+	$fields="sys_subregions.id, sys_subregions.name, sys_subregions.regionid, sys_subregions.remarks, sys_subregions.ipaddress, sys_subregions.createdby, sys_subregions.createdon, sys_subregions.lasteditedby, sys_subregions.lasteditedon";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$subregions->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+}
+
+if(!empty($id)){
+	$suppliers=new Suppliers();
+	$where=" where id=$id ";
+	$fields="*";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$suppliers->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+	$obj=$suppliers->fetchObject;
+
+	//for autocompletes
+}
+if(empty($id) and empty($obj->action)){
+	if(empty($_GET['edit'])){
+		$obj->action="Save";
+	}
+	else{
+		$obj=$_SESSION['obj'];
+	}
+}	
+elseif(!empty($id) and empty($obj->action)){
+	$obj->action="Update";
+}
+	
+	
+$page_title="Suppliers ";
+include "addsuppliers.php";
+?>

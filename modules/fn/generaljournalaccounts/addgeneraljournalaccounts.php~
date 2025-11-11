@@ -1,0 +1,98 @@
+<title>WiseDigits: Generaljournalaccounts </title>
+<?php 
+include "../../../headerpop.php";
+
+?>
+ <script type="text/javascript" charset="utf-8">
+ $(document).ready(function() {
+ 	$('#tbl').dataTable( {
+ 		"sScrollY": 180,
+ 		"bJQueryUI": true,
+ 		"bSort":false,
+ 		"sPaginationType": "full_numbers"
+ 	} );
+ } );
+ </script>
+
+<div class='main'>
+<form class="forms" id="theform" action="addgeneraljournalaccounts_proc.php" name="generaljournalaccounts" method="POST" enctype="multipart/form-data">
+	<table width="100%" class="titems gridd" border="0" align="center" cellpadding="2" cellspacing="0" id="tblSample">
+	<tr>
+		<td colspan="2"><input type="hidden" name="id" id="id" value="<?php echo $obj->id; ?>"></td>
+	</tr>
+	<tr>
+		<td align="right">Reference : </td>
+		<td><input type="text" name="refid" id="refid" value="<?php echo $obj->refid; ?>"></td>
+	</tr>
+	<tr>
+		<td align="right">Name : </td>
+		<td><input type="text" name="name" id="name" size="45"  value="<?php echo $obj->name; ?>"><font color='red'>*</font></td>
+	</tr>
+	<tr>
+		<td align="right">Account Type : </td>
+			<td><select name="acctypeid">
+<option value="">Select...</option>
+<?php
+	$acctypes=new Acctypes();
+	$where="  ";
+	$fields="sys_acctypes.id, sys_acctypes.name, sys_acctypes.balance";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$acctypes->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+	while($rw=mysql_fetch_object($acctypes->result)){
+	?>
+		<option value="<?php echo $rw->id; ?>" <?php if($obj->acctypeid==$rw->id){echo "selected";}?>><?php echo initialCap($rw->name);?></option>
+	<?php
+	}
+	?>
+</select>
+		</td>
+	</tr>
+	<tr>
+		<td align="right">Category : </td>
+			<td><select name="categoryid">
+<option value="">Select...</option>
+<?php
+	$generaljournalaccounts=new Generaljournalaccounts();
+	$where="  ";
+	$fields="fn_generaljournalaccounts.id, fn_generaljournalaccounts.refid, fn_generaljournalaccounts.name, fn_generaljournalaccounts.acctypeid, fn_generaljournalaccounts.categoryid, fn_generaljournalaccounts.debit, fn_generaljournalaccounts.credit, fn_generaljournalaccounts.createdby, fn_generaljournalaccounts.createdon, fn_generaljournalaccounts.lasteditedby, fn_generaljournalaccounts.lasteditedon";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$generaljournalaccounts->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+	while($rw=mysql_fetch_object($generaljournalaccounts->result)){
+	?>
+		<option value="<?php echo $rw->id; ?>" <?php if($obj->categoryid==$rw->id){echo "selected";}?>><?php echo initialCap($rw->name);?></option>
+	<?php
+	}
+	?>
+</select>
+		</td>
+	</tr>
+	<tr>
+		<td align="right">Debit : </td>
+		<td><input type="text" name="debit" id="debit" size="8"  value="<?php echo $obj->debit; ?>"></td>
+	</tr>
+	<tr>
+		<td align="right">Credit : </td>
+		<td><input type="text" name="credit" id="credit" size="8"  value="<?php echo $obj->credit; ?>"></td>
+	</tr>
+	<tr>
+		<td colspan="2" align="center"><input type="submit" name="action" id="action" value="<?php echo $obj->action; ?>">&nbsp;<input type="submit" name="action" id="action" value="Cancel" onclick="window.top.hidePopWin(true);"/></td>
+	</tr>
+<?php if(!empty($obj->id)){?>
+<?php }?>
+	<?php if(!empty($obj->id)){?> 
+<?php }?>
+</table>
+</form>
+<?php 
+if(!empty($error)){
+	showError($error);
+}
+?>

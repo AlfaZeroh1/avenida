@@ -1,0 +1,99 @@
+<?php
+session_start();
+require_once ("../../../haed.php");
+require_once("../../../DB.php");
+require_once("../../../lib.php");
+require_once("../plots/Plots_class.php");
+require_once("../houses/Houses_class.php");
+/*require_once '../housetenants/Housetenants_class.php';*/
+require_once("../../auth/rules/Rules_class.php");
+
+if(empty($_SESSION['userid'])){;
+	redirect("../../auth/users/login.php");
+}
+?>
+
+
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>House Allocation</title>
+<style type="text/css" media="all">
+.whatsNew {
+	margin: 25px;
+	padding: 10px;
+	background: #ffffff;
+	border: 1px solid #cccccc;
+	border-radius: 10px;
+	-webkit-box-shadow: 0px 0px 8px rgba(0,0,0,0.3);
+	-moz-box-shadow:    0px 0px 8px rgba(0,0,0,0.3);
+	box-shadow:         0px 0px 8px rgba(0,0,0,0.3);
+}
+
+.whatsNew h2 {
+	line-height: 16px;
+	color: #015361;
+	font-family: 'tahoma';
+	font-size: 14px;
+}
+.whatsNew a {
+	line-height: 12px;
+	color: #f00;
+	font-family: 'tahoma';
+	font-weight:bold;
+}
+.whatsNew p {
+	margin-left:20px;
+	line-height: 12px;
+	color: #363634;
+	font-family: 'tahoma';
+	font-size:11px;
+}
+</style>
+
+</head>
+
+<body>
+<div class="whatsNew">
+<h2>Vacant Houses (Property &amp; Number of Vacant Houses)</h2>
+<table style="clear:both;"  class="tgrid display" id="example" width="98%" border="0" cellspacing="0" cellpadding="2" align="center" >
+	<thead>
+		<tr>
+			<th>#</th>
+			<th>Plot Name</th>
+			<th>Number Of vacant Houses</th>
+		</tr>
+	</thead>
+    <tbody>
+<?php
+$plots=new Plots();
+		$i=0;
+		$fields="em_plots.id as pid, em_plots.code,em_plots.name as name, count(em_houses.id) as vacantid";
+		$join="left join em_houses on em_houses.plotid=em_plots.id";
+		$having="";
+		$groupby=" group by em_plots.id";
+		$orderby=" order by name ";
+		$where=" where em_houses.rentalstatusid=2";
+		$plots->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+		$res=$plots->result;
+		while($row=mysql_fetch_object($res)){
+			session_start();
+			
+			$i++;
+				?>
+                <tr>
+                <td><?php echo $i; ?></td>
+			<td><a href="nyumba.php?pid=<?php echo $row->pid; ?>&tenantid=<?php echo $_GET['tenantid'];?>"><?php echo $row->name; ?></a> </td>
+			<td>(<?php echo $row->vacantid;?>)</td>
+                
+</tr>
+                
+<?php }?>
+</tbody>
+</table>
+</div>
+
+</body>
+
+</html>

@@ -1,0 +1,81 @@
+<?php
+session_start();
+require_once("../../../DB.php");
+require_once("../../../lib.php");
+require_once("Patientlaboratorytests_class.php");
+require_once("../../auth/rules/Rules_class.php");
+
+
+
+if(empty($_SESSION['userid'])){;
+	redirect("../../auth/users/login.php");
+}
+
+$auth->roleid="1283";
+$auth->levelid=$_SESSION['level'];
+
+auth($auth);
+
+$obj = (object)$_POST;
+if(empty($obj->action)){
+	$obj->testedon=date("Y-m-d");
+}
+$page_title="Patientlaboratorytests";
+//connect to db
+$db=new DB();
+include"../../../head.php";
+
+$delid=$_GET['delid'];
+$patientlaboratorytests=new Patientlaboratorytests();
+if(!empty($delid)){
+	$patientlaboratorytests->id=$delid;
+	$patientlaboratorytests->delete($patientlaboratorytests);
+	redirect("patientlaboratorytests.php");
+}
+?>
+<form action='patientslaboratorytests.php' method='post'>
+<div align="center">Tested On: <input type='text' name='testedon' size='12' class='date_input' value='<?php echo $obj->testedon; ?>'/>&nbsp;
+<input type='submit' name='action' value='Filter'/></div>
+<table style="clear:both;"  id="example" border="0" cellspacing="0" cellpadding="2" align="center" >
+	<thead>
+		<tr>
+			<th>#</th>
+			<th>Test/Treatment No </th>
+			<th>Patient</th>
+			<th>Scheduled On</th>
+			<th>Testedon</th>
+			<th>&nbsp;</th>
+		</tr>
+	</thead>
+	<tbody>
+	<?php
+		$i=0;
+		$fields="hos_patientlaboratorytests.id, hos_patientlaboratorytests.patienttreatmentid, hos_patientlaboratorytests.testno, concat(hos_patients.surname,' ', hos_patients.othernames) as patientid, hos_patientlaboratorytests.patienttreatmentid, hos_laboratorytests.name as laboratorytestid, hos_patientlaboratorytests.labresults, hos_patientlaboratorytests.testedon, hos_patientlaboratorytests.consult, hos_patientlaboratorytests.createdby, hos_patientlaboratorytests.createdon, hos_patientlaboratorytests.lasteditedby, hos_patientlaboratorytests.lasteditedon";
+		$join=" left join hos_patients on hos_patientlaboratorytests.patientid=hos_patients.id  left join hos_laboratorytests on hos_patientlaboratorytests.laboratorytestid=hos_laboratorytests.id ";
+		$having="";
+		$groupby=" group by hos_patientlaboratorytests.testno ";
+		$orderby=" order by hos_patientlaboratorytests.testno desc ";
+		$where=" where hos_patientlaboratorytests.testedon='$obj->testedon'";
+		$patientlaboratorytests->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+		$res=$patientlaboratorytests->result;
+		$where="";
+		while($row=mysql_fetch_object($res)){
+		$i++;
+	?>
+		<tr>
+			<td><?php echo $i; ?></td>
+			<td><?php if(empty($row->consult)){echo $row->testno;}else{echo $row->patienttreatmentid; } ?></td>
+			<td><?php echo initialCap($row->patientid); ?><?php if($row->consult==1){echo "<i>(from doctor)</i>";}?></td>
+			<td><?php echo formatDate($row->createdon); ?></td>
+			<td><?php echo formatDate($row->testedon); ?></td>
+			<td><a href='patientlaboratorytests.php?testno=<?php echo $row->testno; ?>' >View</a></td>
+		</tr>
+	<?php 
+	}
+	?>
+	</tbody>
+</table>
+</form>
+<?php
+include"../../../foot.php";
+?>

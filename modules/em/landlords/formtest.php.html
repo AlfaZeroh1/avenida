@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>form validate test</title>
+
+<link type="text/css" media="all" href="error.css" />
+<script src="/wisedigits/estate/js/jquery-1.7.1.js"></script>
+<script src="/wisedigits/estate/modules/em/landlords/jqueryui.js"></script>
+
+<script src="functions.js"></script>
+</head>
+
+<body>
+
+<form id"formtest"  method="post" action="<?php echo $_SERVER['PHP_SELF'] ?>">
+<div id="form">
+                                <div class="row">
+                                    <div class="label">Names:</div>
+                                    <div class="input" id="fname">
+                                    <input type="text" id="firstname" class="detail" name="firstname" value="" />
+                                    </div>
+                                    <div class="context">eg. <strong>John</strong> Smith</div>
+                                </div>
+                                <div class="row">
+                                    <div class="label">Idno:</div>
+                                    <div class="input" id="fname">
+                                    <input type="number" id="firstname" class="detail" name="firstname" value="" />
+                                    </div>
+                                    <div class="context">eg. <strong>John</strong> Smith</div>
+                                </div>
+                                <div class="row">
+                                    <div class="label">Tel:</div>
+                                    <div class="input" id="fname">
+                                    <input type="tel" id="firstname" class="detail" name="firstname" value="" />
+                                    </div>
+                                    <div class="context">eg. <strong>John</strong> Smith</div>
+                                </div>
+                                
+                                <div class="submit">
+                                    <input type="submit" name="submit" id="submit" value="Submit" />
+                                    <div class="cb"></div>
+                                </div>
+                          
+</div>
+
+
+
+
+</form>
+</body>
+</html>

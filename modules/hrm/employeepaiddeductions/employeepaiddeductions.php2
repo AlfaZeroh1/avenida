@@ -1,0 +1,415 @@
+<?php
+session_start();
+require_once("../../../DB.php");
+require_once("../../../lib.php");
+require_once("Employeepaiddeductions_class.php");
+require_once("../../auth/rules/Rules_class.php");
+require_once("../deductions/Deductions_class.php");
+require_once("../employeepaidallowances/Employeepaidallowances_class.php");
+
+
+if(empty($_SESSION['userid'])){;
+	redirect("../../auth/users/login.php");
+}
+
+$page_title="Employeepaiddeductions";
+//connect to db
+$db=new DB();
+//Authorization.
+$auth->roleid="1145";//View
+$auth->levelid=$_SESSION['level'];
+
+$obj = (object)$_POST;
+$ob = (object)$_GET;
+
+if(!empty($ob->deductionid)){
+  $obj->deductionid=$ob->deductionid;
+}
+
+if(!empty($ob->loanid)){
+  $obj->loanid=$ob->loanid;
+}
+
+if(empty($obj->action)){
+  $obj->month=date("m");
+  $obj->year=date("Y");
+}
+
+auth($auth);
+include"../../../head.php";
+
+$delid=$_GET['delid'];
+$employeepaiddeductions=new Employeepaiddeductions();
+if(!empty($delid)){
+	$employeepaiddeductions->id=$delid;
+	$employeepaiddeductions->delete($employeepaiddeductions);
+	redirect("employeepaiddeductions.php");
+}
+
+$deductions = new Deductions();
+$fields="*";
+$where=" where id='$obj->deductionid'";
+$join="";
+$orderby="";
+$groupby="";
+$having="";
+$deductions->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+$deductions = $deductions->fetchObject;
+
+//Authorization.
+$auth->roleid="1144";//View
+$auth->levelid=$_SESSION['level'];
+
+if(existsRule($auth)){
+?>
+<script type="text/javascript" charset="utf-8">
+$(document).ready(function() {
+
+	//TableToolsInit.sSwfPath = "../../../media/swf/ZeroClipboard.swf";
+	TableTools.DEFAULTS.aButtons = [ "copy", "csv", "xls","pdf" ];
+ 	$('#tbl').dataTable( {
+		"sDom": 'T<"H"lfr>t<"F"ip>',
+		"oTableTools": {
+			"sSwfPath": "../../../media/swf/copy_cvs_xls_pdf.swf"
+		},
+ 		"bJQueryUI": true,
+		"sScrollY": 500,
+		"iDisplayLength":20,
+// 		"sPaginationType": "full_numbers"
+	} );
+} );
+</script> 
+<div style="float:left;" class="buttons"> <input onclick="showPopWin('addemployeepaiddeductions_proc.php',600,430);" value="Add Employeepaiddeductions " type="button"/></div>
+<?php }?>
+<form action="" method="post">
+<table>
+<tr>
+<td><h2><?php echo $deductions->name; ?></h2></td>
+</tr>
+  <tr>
+    <td>Month:<input type="hidden" name="deductionid" value="<?php echo $obj->deductionid; ?>"/> 
+    <select name="month" id="month" class="selectbox">
+        <option value="">Select...</option>
+        <option value="1" <?php if($obj->month==1){echo"selected";}?>>January</option>
+        <option value="2" <?php if($obj->month==2){echo"selected";}?>>February</option>
+        <option value="3" <?php if($obj->month==3){echo"selected";}?>>March</option>
+        <option value="4" <?php if($obj->month==4){echo"selected";}?>>April</option>
+        <option value="5" <?php if($obj->month==5){echo"selected";}?>>May</option>
+        <option value="6" <?php if($obj->month==6){echo"selected";}?>>June</option>
+        <option value="7" <?php if($obj->month==7){echo"selected";}?>>July</option>
+        <option value="8" <?php if($obj->month==8){echo"selected";}?>>August</option>
+        <option value="9" <?php if($obj->month==9){echo"selected";}?>>September</option>
+        <option value="10" <?php if($obj->month==10){echo"selected";}?>>October</option>
+        <option value="11" <?php if($obj->month==11){echo"selected";}?>>November</option>
+        <option value="12" <?php if($obj->month==12){echo"selected";}?>>December</option>
+      </select>
+    Year:
+    <select name="year" id="year" class="selectbox">
+          <option value="">Select...</option>
+          <?php
+	  $i=date("Y")-10;
+	  while($i<date("Y")+10)
+	  {
+		?>
+		  <option value="<?php echo $i; ?>" <?php if($obj->year==$i){echo"selected";}?>><?php echo $i; ?></option>
+		  <?
+	    $i++;
+	  }
+	  ?>
+        </select>&nbsp;<input type="submit" name="action" value="Filter"/></td>   
+  </tr>
+</table>
+</form>
+<table style="clear:both;"  class="tgrid display" id="tbl" width="98%" border="0" cellspacing="0" cellpadding="2" align="center" >
+	<thead>
+		<tr> <?php if($obj->deductionid==1)
+		{
+		?>  
+			<th>#</th>
+			<th>PIN of Employee</th>
+			<th>Name of Employee </th>
+			<th>Residential Status</th>
+			<th>Type of Employee</th>
+			<th>exemption certificate no</th>
+			<th>Basic salary</th>
+			<th>House Allowance </th>
+			<th>Transport Allowance </th>
+			<th>Leave Allowance</th>
+			<th>Overtime Allowance</th>
+			<th>Pension</th>
+			<th>Directors fee</th>
+			<th>Lump sum payment if any</th>
+			<th>Other Allowance</th>
+			<th>Total Cash Pay(A)</th>
+			<th>car benefit</th>
+			<th>other benefits</th>
+			<th>Total non cash pay</th>
+			<th>global income</th>
+			<th>type of housing</th>
+			<th>rent of house</th>
+			<th>computed rent</th>
+			<th>recovered rent</th>
+			<th>net velue of house</th>
+			<th>total gross pay</th>
+			<th>30% cash pay</th>
+			<th>actual contr.</th>
+			<th>possible limit</th>
+			<th>morgage interest</th>
+			<th>deposit on home ownership</th>
+			<th>Amount of benefit</th>
+			<th>execeptions(disability)</th>
+			<th>taxable pay</th>
+			<th>tax payable</th>
+			<th>monthly P.R</th>
+			<th>Amount of In. Relief</th>
+			<th>PAYE tax</th>
+			<th>Self Assessed PAYE tax</th>
+		<?php
+	       }else{?>
+	                <th>#</th>
+			<th>PF NUM </th>
+			<th>Employee </th>
+			<th>IDNO </th>
+			<th>PIN No </th>
+			<th>NSSF No </th>
+			<th>NHIF No </th>
+			<th>Amount </th>
+			<th>Paid On </th>
+	       
+	       <?php } ?>
+<?php
+//Authorization.
+$auth->roleid="1146";//View
+$auth->levelid=$_SESSION['level'];
+
+if(existsRule($auth)){
+?>
+			<th>&nbsp;</th>
+<?php
+}
+//Authorization.
+$auth->roleid="4172";//View
+$auth->levelid=$_SESSION['level'];
+
+if(existsRule($auth)){
+?>
+			<th>&nbsp;</th>
+<?php } ?>
+		</tr>
+	</thead>
+	<tbody>
+	<?php  
+		$i=0;
+		$fields="hrm_employeepaiddeductions.id, hrm_employeepaiddeductions.employeepaymentid,hrm_employeepaiddeductions.paidon, hrm_deductions.name as deductionid, hrm_loans.name as loanid,  concat(concat(hrm_employees.firstname,' ',hrm_employees.middlename),' ',hrm_employees.lastname) as employeename,hrm_employees.pfnum,hrm_employees.id as employeeid,hrm_employees.basic,hrm_employees.idno,hrm_employees.pinno,hrm_employees.nssfno,hrm_employees.nhifno,hrm_employees.lastname,hrm_employeepaiddeductions.amount, hrm_employeepaiddeductions.month, hrm_employeepaiddeductions.year, hrm_employeepaiddeductions.paidon, hrm_employeepaiddeductions.createdby, hrm_employeepaiddeductions.createdon, hrm_employeepaiddeductions.lasteditedby, hrm_employeepaiddeductions.lasteditedon, hrm_employeepaiddeductions.ipaddress";
+		$join=" left join hrm_deductions on hrm_employeepaiddeductions.deductionid=hrm_deductions.id  left join hrm_loans on hrm_employeepaiddeductions.loanid=hrm_loans.id  left join hrm_employees on hrm_employeepaiddeductions.employeeid=hrm_employees.id ";
+		$having="";
+		$groupby="";
+		$orderby="";
+		$where=" where hrm_employeepaiddeductions.deductionid='$obj->deductionid' and hrm_employeepaiddeductions.month='$obj->month' and hrm_employeepaiddeductions.year='$obj->year'";
+		if(!empty($obj->loanid))
+		  $where.=" and hrm_employeepaiddeductions.loanid='$obj->loanid' ";
+		$employeepaiddeductions->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+		$res=$employeepaiddeductions->result;
+		//echo $employeepaiddeductions->sql;
+		while($row=mysql_fetch_object($res)){
+		$i++;
+	?>
+		<tr>   <?php if($obj->deductionid==1)
+		{
+		$employeepaidallowances=new Employeepaidallowances();
+		$fields="sum(hrm_employeepaidallowances.amount) as overtime";
+		$join="";
+		$having="";
+		$where=" where employeeid='$row->employeeid' and allowanceid='3' and month='$obj->month' and year='$obj->year' ";
+		$groupby="";
+		$orderby="";
+		$employeepaidallowances->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+		//echo $overtime->sql;
+		$res2=$employeepaidallowances->result;	
+		while($row2=mysql_fetch_object($res2)){
+		$row1->overtime=$row2->overtime;
+		if($row1->overtime==NULL)
+		{
+		$row1->overtime=0;
+		}		
+		}
+
+		$fields="sum(hrm_employeepaidallowances.amount) as amount";
+		$join="";
+		$having="";
+		$where=" where employeeid='$row->employeeid' and allowanceid='10' and month='$obj->month' and year='$obj->year' ";
+		$groupby="";
+		$orderby="";
+		$employeepaidallowances->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+                $r1=$employeepaidallowances->result;
+                //echo $employeepaidallowances->sql;
+		while($r1=mysql_fetch_object($r1)){
+		$travellingal=$r1->amount;
+		if($travellingal==NULL)
+		{
+		$travellingal=0;
+		}		
+		}
+		
+		$fields="sum(hrm_employeepaidallowances.amount) as amount";
+		$join="";
+		$having="";
+		$where=" where employeeid='$row->employeeid' and allowanceid='1' and month='$obj->month' and year='$obj->year' ";
+		$groupby="";
+		$orderby="";
+		$employeepaidallowances->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+                $r2=$employeepaidallowances->result;
+		while($r2=mysql_fetch_object($r2)){
+		$houseall=$r2->amount;
+		if($houseall==NULL)
+		{
+		$houseall=0;
+		}		
+		}
+		
+		//select total allowances
+		$fields="sum(hrm_employeepaidallowances.amount) as amount";
+		$join="";
+		$having="";
+		$where=" where employeeid='$row->employeeid' and month='$obj->month' and year='$obj->year' ";
+		$groupby="";
+		$orderby="";
+		$employeepaidallowances->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+                $w1=$employeepaidallowances->result;
+		while($w1=mysql_fetch_object($w1)){
+		$totalall=$w1->amount;
+		if($totalall==NULL)
+		{
+		$totalall=0;
+		}		
+		}
+		
+		$fields="hrm_employeepaiddeductions.amount";
+		$join="";
+		$having="";
+		$groupby="";
+		$orderby="";
+		$where=" where hrm_employeepaiddeductions.employeeid='$row->employeeid' and deductionid='3' and month='$obj->month' and year='$obj->year'";
+		$employeepaiddeductions->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+		$r=$employeepaiddeductions->result;
+		//echo $employeepaiddeductions->sql;
+		while($row2=mysql_fetch_object($r)){
+		$nssf=$row2->amount;
+		if($nssf==NULL)
+		{
+		$nssf=0;
+		}		
+		}
+		
+		$fields="hrm_employeepaiddeductions.amount";
+		$join="";
+		$having="";
+		$groupby="";
+		$orderby="";
+		$where=" where hrm_employeepaiddeductions.employeeid='$row->employeeid' and deductionid='17' and month='$obj->month' and year='$obj->year'";
+		$employeepaiddeductions->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+		$ic=$employeepaiddeductions->result;
+		//echo $employeepaiddeductions->sql;
+		while($row4=mysql_fetch_object($ic)){
+		$icea=$row4->amount;
+		if($icea==NULL)
+ 		{
+		$icea=0;
+		}		
+ 		}
+		
+		
+		$fields="hrm_employeepaiddeductions.amount";
+		$join="";
+		$having="";
+		$groupby="";
+		$orderby="";
+		$where=" where hrm_employeepaiddeductions.employeeid='$row->employeeid' and deductionid='1' and month='$obj->month' and year='$obj->year'";
+		$employeepaiddeductions->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+		$res3=$employeepaiddeductions->result;
+		//echo $employeepaiddeductions->sql;
+		while($row3=mysql_fetch_object($res3)){
+		$row->paye=$row3->amount;
+		//echo $row->paye;	
+		}
+		?>
+			<td><?php echo $i; ?></td>
+			<td><?php echo $row->pinno; ?></td>
+			<td><?php echo $row->employeename; ?></td>
+			<td></td>
+			<td></td>
+			<td></td>
+			<td><?php echo $row->basic; ?></td>
+			<td><?php echo $houseall; ?></td>
+			<td><?php echo $travellingal; ?></td>
+			<td>0</td>
+			<td><?php echo $row1->overtime; ?></td>
+			<td><?php echo ($nssf+$icea); ?></td>
+			<td>0</td>
+			<td>0</td>
+			<td>0</td>
+			<td>0</td>
+			<td>0</td>
+			<td>0</td>
+			<td>0</td>
+			<td>0</td>
+			<td>0</td>
+			<td>0</td>
+			<td>0</td>
+			<td>0</td>
+			<td>0</td>
+			<td><?php echo ($row->basic+$totalall); ?></td>
+			<td>0</td>
+			<td>0</td>
+			<td>0</td>
+			<td>0</td>
+			<td>0</td>
+			<td>0</td>
+			<td>0</td>
+			<td><?php echo ($row->basic+$totalall); ?></td>
+			<td><?php echo ($row->paye+1162); ?></td>
+			<td>1162</td>
+			<td>0</td>
+			<td><?php echo $row->paye; ?></td>
+			<td>0</td>
+	       <?php
+	      // }
+	       }else{?>
+	               <td><?php echo $i; ?></td>
+			<td><?php echo $row->pfnum; ?></td>
+			<td><?php echo $row->employeename; ?></td>
+			<td><?php echo $row->idno; ?></td>
+			<td><?php echo $row->pinno; ?></td>
+			<td><?php echo $row->nssfno; ?></td>
+			<td><?php echo $row->nhifno; ?></td>
+			<td><?php echo formatNumber($row->amount); ?></td>
+			<td><?php echo $row->paidon; ?></td>
+	       
+	      <?php } ?>
+<?php
+//Authorization.
+$auth->roleid="1146";//View
+$auth->levelid=$_SESSION['level'];
+
+if(existsRule($auth)){
+?>
+			<td><a href="javascript:;" onclick="showPopWin('addemployeepaiddeductions_proc.php?id=<?php echo $row->id; ?>',600,430);">View</a></td>
+<?php
+}
+//Authorization.
+$auth->roleid="4172";//View
+$auth->levelid=$_SESSION['level'];
+
+if(existsRule($auth)){
+?>
+			<td><a href='employeepaiddeductions.php?delid=<?php echo $row->id; ?>' onclick="return confirm('Are you sure you want to delete?')">Delete</a></td>
+<?php } ?>
+		</tr>
+	<?php 
+	}
+	?>
+	</tbody>
+</table>
+<?php
+include"../../../foot.php";
+?>

@@ -1,0 +1,170 @@
+<?php 
+require_once("ConfigaccountsDBO.php");
+class Configaccounts
+{				
+	var $id;			
+	var $name;			
+	var $accno;			
+	var $currencyid;			
+	var $remarks;			
+	var $ipaddress;			
+	var $createdby;			
+	var $createdon;			
+	var $lasteditedby;			
+	var $lasteditedon;			
+	var $configaccountsDBO;
+	var $fetchObject;
+	var $sql;
+	var $result;
+	var $table;
+	var $affectedRows;
+
+	function setObject($obj){
+		$this->id=str_replace("'","\'",$obj->id);
+		$this->name=str_replace("'","\'",$obj->name);
+		$this->accno=str_replace("'","\'",$obj->accno);
+		if(empty($obj->currencyid))
+			$obj->currencyid='NULL';
+		$this->currencyid=$obj->currencyid;
+		$this->remarks=str_replace("'","\'",$obj->remarks);
+		$this->ipaddress=str_replace("'","\'",$obj->ipaddress);
+		$this->createdby=str_replace("'","\'",$obj->createdby);
+		$this->createdon=str_replace("'","\'",$obj->createdon);
+		$this->lasteditedby=str_replace("'","\'",$obj->lasteditedby);
+		$this->lasteditedon=str_replace("'","\'",$obj->lasteditedon);
+		return $this;
+	
+	}
+	//get id
+	function getId(){
+		return $this->id;
+	}
+	//set id
+	function setId($id){
+		$this->id=$id;
+	}
+
+	//get name
+	function getName(){
+		return $this->name;
+	}
+	//set name
+	function setName($name){
+		$this->name=$name;
+	}
+
+	//get accno
+	function getAccno(){
+		return $this->accno;
+	}
+	//set accno
+	function setAccno($accno){
+		$this->accno=$accno;
+	}
+
+	//get currencyid
+	function getCurrencyid(){
+		return $this->currencyid;
+	}
+	//set currencyid
+	function setCurrencyid($currencyid){
+		$this->currencyid=$currencyid;
+	}
+
+	//get remarks
+	function getRemarks(){
+		return $this->remarks;
+	}
+	//set remarks
+	function setRemarks($remarks){
+		$this->remarks=$remarks;
+	}
+
+	//get ipaddress
+	function getIpaddress(){
+		return $this->ipaddress;
+	}
+	//set ipaddress
+	function setIpaddress($ipaddress){
+		$this->ipaddress=$ipaddress;
+	}
+
+	//get createdby
+	function getCreatedby(){
+		return $this->createdby;
+	}
+	//set createdby
+	function setCreatedby($createdby){
+		$this->createdby=$createdby;
+	}
+
+	//get createdon
+	function getCreatedon(){
+		return $this->createdon;
+	}
+	//set createdon
+	function setCreatedon($createdon){
+		$this->createdon=$createdon;
+	}
+
+	//get lasteditedby
+	function getLasteditedby(){
+		return $this->lasteditedby;
+	}
+	//set lasteditedby
+	function setLasteditedby($lasteditedby){
+		$this->lasteditedby=$lasteditedby;
+	}
+
+	//get lasteditedon
+	function getLasteditedon(){
+		return $this->lasteditedon;
+	}
+	//set lasteditedon
+	function setLasteditedon($lasteditedon){
+		$this->lasteditedon=$lasteditedon;
+	}
+
+	function add($obj){
+		$configaccountsDBO = new ConfigaccountsDBO();
+		if($configaccountsDBO->persist($obj)){
+			$this->id=$configaccountsDBO->id;
+			$this->sql=$configaccountsDBO->sql;
+			return true;	
+		}
+	}			
+	function edit($obj,$where=""){
+		$configaccountsDBO = new ConfigaccountsDBO();
+		if($configaccountsDBO->update($obj,$where)){
+			$this->sql=$configaccountsDBO->sql;
+		}
+			return true;	
+	}			
+	function delete($obj,$where=""){			
+		$configaccountsDBO = new ConfigaccountsDBO();
+		if($configaccountsDBO->delete($obj,$where=""))		
+			$this->sql=$configaccountsDBO->sql;
+			return true;	
+	}			
+	function retrieve($fields,$join,$where,$having,$groupby,$orderby){			
+		$configaccountsDBO = new ConfigaccountsDBO();
+		$this->table=$configaccountsDBO->table;
+		$configaccountsDBO->retrieve($fields,$join,$where,$having,$groupby,$orderby);		
+		$this->sql=$configaccountsDBO->sql;
+		$this->result=$configaccountsDBO->result;
+		$this->fetchObject=$configaccountsDBO->fetchObject;
+		$this->affectedRows=$configaccountsDBO->affectedRows;
+	}			
+	function validate($obj){
+	
+			return null;
+	
+	}
+
+	function validates($obj){
+	
+			return null;
+	
+	}
+}				
+?>

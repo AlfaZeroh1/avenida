@@ -1,0 +1,58 @@
+<?php
+require_once("../../../DB.php");
+require_once("../../../lib.php");
+require_once '../payables/Payables_class.php';
+require_once '../../fn/generaljournals/Generaljournals_class.php';
+
+//connect to db
+$db=new DB();
+
+$tenantid = $_GET['tenantid'];
+$houseid = $_GET['houseid'];
+$month=date("m");
+$year=date("Y");
+
+$total=0;
+
+//get previous balance
+$generaljournals = new Generaljournals();
+$fields=" sum(fn_generaljournals.debit)-sum(fn_generaljournals.credit) amount";
+$join=" left join fn_generaljournalaccounts on fn_generaljournalaccounts.id=fn_generaljournals.accountid ";
+$where=" where fn_generaljournalaccounts.refid='$tenantid' and fn_generaljournalaccounts.acctypeid='32'  ";
+$having=" ";
+$groupby="";
+$orderby="";
+$generaljournals->retrieve($fields, $join, $where, $having, $groupby, $orderby);echo $generaljournals->sql;
+$generaljournals=$generaljournals->fetchObject;
+
+$total+=$generaljournals->amount;
+
+?>
+<tr>
+	<td align="right">Balance b/f</td>
+	<td align="right"><?php echo formatNumber($generaljournals->amount);  ?></td>
+</tr>
+<?php 
+//retrieve recent invoices
+$payables = new Payables();
+$fields=" em_paymentterms.name, em_payables.documentno, em_payables.amount";
+$join=" left join em_paymentterms on em_paymentterms.id=em_payables.paymenttermid ";
+$where=" where em_payables.houseid='$houseid' and em_payables.tenantid='$tenantid' and em_payables.month='$month' and em_payables.year='$year' ";
+$having=" ";
+$groupby="";
+$orderby="";
+$payables->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+while($row=mysql_fetch_object($payables->result)){
+
+$total+=$row->amount;
+?>
+<tr>
+	<td align="right"><?php echo initialCap($row->name); ?>:</td>
+	<td align="right"><?php echo formatNumber($row->amount); ?></td>
+</tr>
+<?php }?>
+
+<tr>
+	<td align="right">Balance b/d</td>
+	<td align="right"><?php echo formatNumber($total);  ?></td>
+</tr>

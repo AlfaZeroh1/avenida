@@ -1,0 +1,67 @@
+#loading_cont {
+  background-color: black !important;
+  margin: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 9999 !important;
+  box-sizing: border-box !important;
+  position: fixed;
+  top: 0;
+}
+.hide_loading_screen{
+  display: none !important;
+}
+#loading {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50% , -50%);
+  color: white;
+}
+#loading span {
+  font-size: 80px;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  line-height: 100%;
+  position: relative;
+  mix-blend-mode: difference;
+}
+#loading::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100px;
+  height: 100%;
+  background-color: white;
+  animation: move 4s linear infinite;
+  z-index: -1;
+}
+@keyframes move {
+  0% , 100% {
+      left: 0;
+  }
+  50% {
+      left: calc(100% - 100px);
+  }
+}
+
+#content-flex{
+  overflow: scroll;
+  border: none !important;
+}
+
+#tbl {
+  margin: 20px auto;
+  table-layout: auto; /* Allows the browser to determine column widths based on content */
+  width: auto; /* Removes any predefined table width */
+}
+
+#tbl th, #tbl td {
+  white-space: nowrap; /* Prevents wrapping of text */
+  padding: 4px 8px; /* Optional: Adds padding for better readability */
+}
+
+#tbl thead th {
+  text-align: left; /* Optional: Aligns header text to the left */
+}

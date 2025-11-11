@@ -1,0 +1,198 @@
+<?php 
+session_start();
+require_once("../../../DB.php");
+require_once("../../../lib.php");
+require_once("Plotexpenses_class.php");
+require_once("../../auth/rules/Rules_class.php");
+require_once("../../fn/generaljournalaccounts/Generaljournalaccounts_class.php");
+
+
+if(empty($_SESSION['userid'])){;
+	redirect("../../auth/users/login.php");
+}
+
+require_once("../../em/plots/Plots_class.php");
+require_once("../../fn/expenses/Expenses_class.php");
+//Authorization.
+if(!empty($_GET['id'])){
+	$auth->roleid="4356";//Edit
+}
+else{
+	$auth->roleid="4354";//Add
+}
+$auth->levelid=$_SESSION['level'];
+auth($auth);
+
+
+//connect to db
+$db=new DB();
+$obj=(object)$_POST;
+$ob=(object)$_GET;
+
+$mode=$_GET['mode'];
+if(!empty($mode)){
+	$obj->mode=$mode;
+}
+$id=$_GET['id'];
+$error=$_GET['error'];
+	
+if(empty($obj->action)){
+	$obj->expensedate=date("Y-m-d");
+
+	$obj->month=date("m");
+
+	$obj->year=date("Y");
+
+}
+	
+if($obj->action=="Save"){
+	$plotexpenses=new Plotexpenses();
+	$obj->createdby=$_SESSION['userid'];
+	$obj->createdon=date("Y-m-d H:i:s");
+	$obj->lasteditedby=$_SESSION['userid'];
+	$obj->lasteditedon=date("Y-m-d H:i:s");
+	$shpplotexpenses=$_SESSION['shpplotexpenses'];
+	$error=$plotexpenses->validates($obj);
+	if(!empty($error)){
+		$error=$error;
+	}
+	elseif(empty($shpplotexpenses)){
+		$error="No items in the sale list!";
+	}
+	else{
+		$plotexpenses=$plotexpenses->setObject($obj);
+		if($plotexpenses->add($plotexpenses,$shpplotexpenses)){
+			$error=SUCCESS;
+			redirect("addplotexpenses_proc.php?id=".$plotexpenses->id."&error=".$error);
+		}
+		else{
+			$error=FAILURE;
+		}
+	}
+}
+	
+if($obj->action=="Update"){
+	$plotexpenses=new Plotexpenses();
+	$obj->lasteditedby=$_SESSION['userid'];
+	$obj->lasteditedon=date("Y-m-d H:i:s");
+
+	$error=$plotexpenses->validate($obj);
+	if(!empty($error)){
+		$error=$error;
+	}
+	else{
+		$plotexpenses=$plotexpenses->setObject($obj);
+		$shpplotexpenses=$_SESSION['shpplotexpenses'];
+		if($plotexpenses->edit($plotexpenses,$shpplotexpenses)){
+			$error=UPDATESUCCESS;
+			redirect("addplotexpenses_proc.php?id=".$plotexpenses->id."&error=".$error);
+		}
+		else{
+			$error=UPDATEFAILURE;
+		}
+	}
+}
+if($obj->action2=="Add"){
+
+	if(empty($obj->expenseid)){
+		$error="Expense must be provided";
+	}
+	elseif(empty($obj->quantity)){
+		$error="Quantity must be provided";
+	}
+	elseif(empty($obj->amount)){
+		$error="Amount must be provided";
+	}
+	else{
+	$_SESSION['obj']=$obj;
+	if(empty($obj->iterator))
+		$it=0;
+	else
+		$it=$obj->iterator;
+	$shpplotexpenses=$_SESSION['shpplotexpenses'];
+
+	$expenses = new Expenses();
+	$fields=" * ";
+	$join="";
+	$groupby="";
+	$having="";
+	$where=" where id='$obj->expenseid'";
+	$expenses->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+	$expenses=$expenses->fetchObject;
+
+	;
+	$shpplotexpenses[$it]=array('expenseid'=>"$obj->expenseid", 'expensename'=>"$expenses->name", 'quantity'=>"$obj->quantity", 'amount'=>"$obj->amount", 'remarks'=>"$obj->remarks", 'total'=>"$obj->total");
+
+ 	$it++;
+		$obj->iterator=$it;
+ 	$_SESSION['shpplotexpenses']=$shpplotexpenses;
+
+	$obj->expensename="";
+ 	$obj->expenseid="";
+ 	$obj->quantity="";
+ 	$obj->amount="";
+ 	$obj->remarks="";
+ }
+}
+
+if(empty($obj->action)){
+
+	$plots= new Plots();
+	$fields="em_plots.id, em_plots.code, em_plots.landlordid, em_plots.actionid, em_plots.noofhouses, em_plots.regionid, em_plots.managefrom, em_plots.managefor, em_plots.indefinite, em_plots.typeid, em_plots.commission, em_plots.target, em_plots.name, em_plots.lrno, em_plots.estate, em_plots.road, em_plots.location, em_plots.letarea, em_plots.unusedarea, em_plots.employeeid, em_plots.deposit, em_plots.depositmgtfee, em_plots.depositmgtfeeperc, em_plots.depositmgtfeevatable, em_plots.depositmgtfeevatclasseid, em_plots.mgtfeevatclasseid, em_plots.vatable, em_plots.vatclasseid, em_plots.deductcommission, em_plots.status, em_plots.penaltydate, em_plots.remarks";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$plots->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+
+	$expenses= new Expenses();
+	$fields="fn_expenses.id, fn_expenses.name, fn_expenses.code, fn_expenses.expensetypeid, fn_expenses.expensecategoryid, fn_expenses.description, fn_expenses.createdby, fn_expenses.createdon, fn_expenses.lasteditedby, fn_expenses.lasteditedon";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$expenses->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+}
+
+if(!empty($id)){
+	$plotexpenses=new Plotexpenses();
+	$where=" where id=$id ";
+	$fields="em_plotexpenses.id, em_plotexpenses.plotid, em_plotexpenses.expenseid, em_plotexpenses.quantity, em_plotexpenses.amount, em_plotexpenses.total, em_plotexpenses.expensedate, em_plotexpenses.documentno, em_plotexpenses.month, em_plotexpenses.year, em_plotexpenses.remarks";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$plotexpenses->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+	$obj=$plotexpenses->fetchObject;
+
+	//for autocompletes
+	$plots = new Plots();
+	$fields=" * ";
+	$where=" where id='$obj->plotid'";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$plots->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+	$auto=$plots->fetchObject;
+
+	$obj->plotname=$auto->name;
+}
+if(empty($id) and empty($obj->action)){
+	if(empty($_GET['edit'])){
+		$obj->action="Save";
+	}
+	else{
+		$obj=$_SESSION['obj'];
+	}
+}	
+elseif(!empty($id) and empty($obj->action)){
+	$obj->action="Update";
+}
+	
+	
+$page_title="Plotexpenses ";
+include "addplotexpenses.php";
+?>

@@ -1,0 +1,51 @@
+<?php 
+require_once("../../../DB.php");
+class PatientvitalsignsDBO extends DB{
+	var $fetchObject;
+	var $sql;
+	var $id;
+	var $result;
+	var $affectedRows;
+ var $table="hos_patientvitalsigns";
+
+	function persist($obj){
+		$sql="insert into hos_patientvitalsigns(id,observedon,observedtime,patientid,patientappointmentid,patienttreatmentid,vitalsignid,results,remarks)
+						values('','$obj->observedon','$obj->observedtime',$obj->patientid,'$obj->patientappointmentid','$obj->patienttreatmentid',$obj->vitalsignid,'$obj->results','$obj->remarks')";		
+		$this->sql=$sql;//echo $sql;
+		if(mysql_query($sql,$this->connection)){		
+			$this->id=mysql_insert_id();
+			return true;	
+		}		
+	}		
+ 
+	function update($obj,$where=""){			
+		if(empty($where)){
+			$where="id='$obj->id'";
+		}
+		$sql="update hos_patientvitalsigns set observedon='$obj->observedon',observedtime='$obj->observedtime',patientid=$obj->patientid,patientappointmentid='$obj->patientappointmentid',patienttreatmentid='$obj->patienttreatmentid',vitalsignid=$obj->vitalsignid,results='$obj->results',remarks='$obj->remarks' where $where ";
+		$this->sql=$sql;
+		if(mysql_query($sql,$this->connection)){		
+			return true;	
+		}
+	}			
+ 
+	function delete($obj,$where=""){			
+		if(empty($where)){
+			$where=" where id='$obj->id' ";
+		}
+		$sql="delete from hos_patientvitalsigns $where ";
+		$this->sql=$sql;
+		if(mysql_query($sql,$this->connection))		
+				return true;	
+	}			
+ 
+	function retrieve($fields,$join,$where,$having,$groupby,$orderby){			
+		$sql="select $fields from hos_patientvitalsigns $join $where $groupby $having $orderby"; 
+ 		$this->sql=$sql;
+		$this->result=mysql_query($sql,$this->connection);
+		$this->affectedRows=mysql_affected_rows();
+		$this->fetchObject=mysql_fetch_object(mysql_query($sql,$this->connection));
+	}			
+}			
+?>
+

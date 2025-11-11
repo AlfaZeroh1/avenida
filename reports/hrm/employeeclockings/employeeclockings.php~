@@ -1,0 +1,230 @@
+<?php
+session_start();
+require_once("../../../DB.php");
+require_once("../../../lib.php");
+require_once("../../../modules/hrm/employeeclockings/Employeeclockings_class.php");
+require_once("../../../modules/auth/users/Users_class.php");
+require_once("../../../modules/hrm/employees/Employees_class.php");
+
+
+if(empty($_SESSION['userid'])){;
+	redirect("../../../modules/auth/users/login.php");
+}
+
+$page_title="Employeeclockings";
+//connect to db
+$db=new DB();
+
+$obj=(object)$_POST;
+
+include"../../../rptheader.php";
+
+//processing filters
+$rptwhere='';
+$track=0;
+$fds='';
+$fd='';
+if(!empty($obj->employeeid)){
+	if($track>0)
+		$rptwhere.="and";
+	else
+		$rptwhere.="where";
+
+		$rptwhere.=" hrm_employeeclockings.employeeid='$obj->employeeid'";
+	$track++;
+}
+
+if(!empty($obj->starttime)){
+	if($track>0)
+		$rptwhere.="and";
+	else
+		$rptwhere.="where";
+
+		$rptwhere.=" hrm_employeeclockings.starttime='$obj->starttime'";
+	$track++;
+}
+
+if(!empty($obj->endtime)){
+	if($track>0)
+		$rptwhere.="and";
+	else
+		$rptwhere.="where";
+
+		$rptwhere.=" hrm_employeeclockings.endtime='$obj->endtime'";
+	$track++;
+}
+
+if(!empty($obj->fromtoday)){
+	if($track>0)
+		$rptwhere.="and";
+	else
+		$rptwhere.="where";
+
+		$rptwhere.=" hrm_employeeclockings.today>='$obj->fromtoday'";
+	$track++;
+}
+
+if(!empty($obj->totoday)){
+	if($track>0)
+		$rptwhere.="and";
+	else
+		$rptwhere.="where";
+
+		$rptwhere.=" hrm_employeeclockings.today<='$obj->totoday'";
+	$track++;
+}
+
+//Processing Groupings
+;$rptgroup='';
+$track=0;
+//Default shows
+?>
+<title><?php echo $page_title; ?></title>
+<script type="text/javascript">
+$().ready(function() {
+ $("#employeename").autocomplete("../../../modules/server/server/search.php?main=hrm&module=employees&field=concat(surname,' ',othernames)", {
+ 	width: 260,
+ 	selectFirst: false
+ });
+ $("#employeename").result(function(event, data, formatted) {
+   if (data)
+   {
+     document.getElementById("employeename").value=data[0];
+     document.getElementById("employeeid").value=data[1];
+   }
+ });
+});
+</script>
+<div id="main">
+<div id="main-inner">
+<div id="content">
+<div id="content-inner">
+<div id="content-header">
+	<div class="page-title"><?php echo $page_title; ?></div>
+	<div class="clearb"></div>
+</div>
+<div id="content-flex">
+<div class="buttons"><a class="positive" href="javascript: expandCollapse('boxB','over');" style="vertical-align:text-top;">Open Popup To Filter</a></div>
+<div id="boxB" class="sh" style="left: 10px; top: 63px; display: none; z-index: 500;">
+<div id="box2"><div class="bar2" onmousedown="dragStart(event, 'boxB')"><span><strong>Choose Criteria</strong></span>
+<a href="#" onclick="expandCollapse('boxB','over')">Close</a></div>
+<form  action="employeeclockings.php" method="post" name="employeeclockings">
+<table width="100%" border="0" align="center">
+	<tr>
+		<td width="50%" rowspan="2">
+		<table class="tgrid gridd" border="0" align="right">
+			<tr>
+				<td>Employee</td>
+				<td><input type='text' size='6' name='employeename' id='employeename' value='<?php echo $obj->employeename; ?>'>
+					<input type="hidden" name='employeeid' id='employeeid' value='<?php echo $obj->field; ?>'></td>
+			</tr>
+			<tr>
+				<td>Start Time</td>
+				<td><input type='text' id='starttime' size='6' name='starttime' value='<?php echo $obj->starttime;?>'></td>
+			</tr>
+			<tr>
+				<td>End Time</td>
+				<td><input type='text' id='endtime' size='6' name='endtime' value='<?php echo $obj->endtime;?>'></td>
+			</tr>
+			<tr>
+				<td>Today</td>
+				<td><strong>From:</strong><input type='text' id='fromtoday' size='6' name='fromtoday' readonly class="date_input" value='<?php echo $obj->fromtoday;?>'/>
+							<br/><strong>To:</strong><input type='text' id='totoday' size='6' name='totoday' readonly class="date_input" value='<?php echo $obj->totoday;?>'/></td>
+			</tr>
+		</table>
+		</td>
+		<td>
+		<table class="tgrid gridd" width="100%" border="0" align="left">
+			<tr>
+			<th colspan="2"><div align="left"><strong>Group By (For Summarised Reports)</strong>: </div></th>
+			</tr>
+		</table>
+		</td>
+		</tr>
+		<tr>
+		<td>
+		<table class="tgrid gridd" width="100%" border="0" align="left">
+			<tr>
+				<th colspan="3"><div align="left"><strong>Fields to Show (For Detailed Reports)</strong>: </div></th>
+			</tr>
+			<tr>
+				<td><input type='checkbox' name='shemployeeid' value='1' <?php if(isset($_POST['shemployeeid'])  or empty($obj->action)){echo"checked";}?>>&nbsp;Employee</td>
+				<td><input type='checkbox' name='shstarttime' value='1' <?php if(isset($_POST['shstarttime'])  or empty($obj->action)){echo"checked";}?>>&nbsp;Start Time</td>
+			<tr>
+				<td><input type='checkbox' name='shendtime' value='1' <?php if(isset($_POST['shendtime'])  or empty($obj->action)){echo"checked";}?>>&nbsp;End Time</td>
+				<td><input type='checkbox' name='shremarks' value='1' <?php if(isset($_POST['shremarks'])  or empty($obj->action)){echo"checked";}?>>&nbsp;Remarks</td>
+			<tr>
+				<td><input type='checkbox' name='today' value='1' <?php if(isset($_POST['today'])  or empty($obj->action)){echo"checked";}?>>&nbsp;Today</td>
+		</table>
+		</td>
+	</tr>
+	<tr>
+		<td colspan="2" align='center'><input type="submit" name="action" id="action" value="Filter" /></td>
+	</tr>
+</table>
+</form>
+</div>
+</div>
+<table style="clear:both;"  class="tgrid display" id="example" width="98%" border="0" cellspacing="0" cellpadding="2" align="center" >
+	<thead>
+		<tr>
+			<th>#</th>
+			<?php if($obj->shemployeeid==1  or empty($obj->action)){ ?>
+				<th>Employee </th>
+			<?php } ?>
+			<?php if($obj->shstarttime==1  or empty($obj->action)){ ?>
+				<th>Start Time </th>
+			<?php } ?>
+			<?php if($obj->shendtime==1  or empty($obj->action)){ ?>
+				<th>End Time </th>
+			<?php } ?>
+			<?php if($obj->shremarks==1  or empty($obj->action)){ ?>
+				<th>Remarks </th>
+			<?php } ?>
+			<?php if($obj->today==1  or empty($obj->action)){ ?>
+				<th> </th>
+			<?php } ?>
+		</tr>
+	</thead>
+	<tbody>
+	<?php
+		$i=0;
+		$employeeclockings=new Employeeclockings();
+		$fields="hrm_employeeclockings.id, concat(hrm_employees.surname,' ', hrm_employees.othernames) as employeeid, hrm_employeeclockings.starttime, hrm_employeeclockings.endtime, hrm_employeeclockings.today, hrm_employeeclockings.remarks, hrm_employeeclockings.createdby, hrm_employeeclockings.createdon, hrm_employeeclockings.lasteditedby, hrm_employeeclockings.lasteditedon".$fds.$fd;
+		$join=" left join hrm_employees on hrm_employeeclockings.employeeid=hrm_employees.id ";
+		$having="";
+		$where= " $rptwhere";
+		$groupby= " $rptgroup";
+		$orderby="";
+		$employeeclockings->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+		$res=$employeeclockings->result;
+		while($row=mysql_fetch_object($res)){
+		$i++;
+	?>
+		<tr>
+			<td><?php echo $i; ?></td>
+			<?php if($obj->shemployeeid==1  or empty($obj->action)){ ?>
+				<td><?php echo $row->employeeid; ?></td>
+			<?php } ?>
+			<?php if($obj->shstarttime==1  or empty($obj->action)){ ?>
+				<td><?php echo $row->starttime; ?></td>
+			<?php } ?>
+			<?php if($obj->shendtime==1  or empty($obj->action)){ ?>
+				<td><?php echo $row->endtime; ?></td>
+			<?php } ?>
+			<?php if($obj->shremarks==1  or empty($obj->action)){ ?>
+				<td><?php echo $row->remarks; ?></td>
+			<?php } ?>
+			<?php if($obj->today==1  or empty($obj->action)){ ?>
+				<td><?php echo $row->day; ?></td>
+			<?php } ?>
+		</tr>
+	<?php 
+	}
+	?>
+	</tbody>
+</div>
+</div>
+</div>
+</div>
+</div>

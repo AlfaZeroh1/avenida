@@ -1,0 +1,72 @@
+<?php
+session_start();
+
+require_once("../../../lib.php");
+
+$obj=(object)$_POST;
+
+if(empty($obj->action)){
+if(empty($obj->type)){
+  $shpordernos=$_SESSION['shpordernos'];
+
+  $num = count($shpordernos);
+
+  if($obj->checked){
+    $shpordernos[$num]=$obj->orderno;
+  }
+
+  $_SESSION['shpordernos']=$shpordernos;
+}else{
+  $shporders = $_SESSION['shporders'];
+  if(empty($obj->warmth))
+    $obj->warmth="";
+    
+  $it = searchForId($obj->itemid,$shporders,"itemid",$obj->warmth);
+  
+  logging("ID# ".$it."==".$obj->itemid."==".$obj->warmth);
+  
+  //get old totals
+  $olditemtotal = $shporders[$it]['quantity']*$shporders[$it]['price'];
+  $newtotal = $obj->quantity*$shporders[$it]['price'];
+  
+  $shporders[$it]['quantity']=$obj->quantity;
+  
+  echo $olditemtotal."|".$newtotal;
+  
+  
+}
+}else{
+  $i = $obj->itemid;
+//   logging("ID# ".$i);
+  
+  $shporders = $_SESSION['shporders'];
+  if(empty($obj->warmth))
+    $obj->warmth="";
+  
+  $i = searchForId($obj->itemid,$shporders,"itemid",$obj->warmth);
+  
+//   $i--;
+  
+//   logging(serialize($shporders));
+  
+//   logging("DEL ID# ".$i."==".$obj->itemid."==".$obj->warmth."========".count($shporders));
+   
+  
+  $olditemtotal = $shporders[$i]['quantity']*$shporders[$i]['price'];
+  $newtotal = 0;
+  
+//   logging("#################################");
+  
+  
+  $shporders1=array_slice($shporders,0,$i);
+  $shporders2=array_slice($shporders,$i+1);
+  $shporders=array_merge($shporders1,$shporders2);
+//   logging(serialize($shporders));
+  echo $olditemtotal."|".$newtotal;
+
+}
+
+$_SESSION['shporders']=$shporders;
+
+
+?>

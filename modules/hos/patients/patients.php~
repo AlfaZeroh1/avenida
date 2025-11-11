@@ -1,0 +1,82 @@
+<?php
+session_start();
+require_once("../../../DB.php");
+require_once("../../../lib.php");
+require_once("Patients_class.php");
+
+
+if(empty($_SESSION['userid'])){;
+	redirect("../../auth/users/login.php");
+}
+
+$page_title="Patients";
+//connect to db
+$db=new DB();
+include"../../../head.php";
+
+$delid=$_GET['delid'];
+$patients=new Patients();
+if(!empty($delid)){
+	$patients->id=$delid;
+	$patients->delete($patients);
+	redirect("patients.php");
+}
+?>
+<div style="float:left;" class="buttons">
+<a class="button icon chat" onclick="showPopWin('addpatients_proc.php', 600, 510);">ADD PATIENTS</a>
+ </div>
+ 
+ <script type="text/javascript" charset="utf-8">
+<?php $_SESSION['aColumns']=array('hos_patients.id','hos_patients.patientno','concat(hos_patients.surname," ",hos_patients.othernames) names','hos_patients.address','hos_patients.email','hos_patients.mobile mobile','sys_genders.name genderid','hos_patients.dob','1','1');?>
+<?php $_SESSION['sColumns']=array('id','patientno','names','address','email','mobile','genderid','dob','1','1');?>
+ <?php $_SESSION['sTable']="hos_patients";?>
+<?php $_SESSION['join']=" left join sys_genders on sys_genders.id=hos_patients.genderid "; ?>
+ 
+ $(document).ready(function() {
+ 	$('#tbl').dataTable( {
+ 		"bJQueryUI": true,
+ 		"bSort":true,
+ 		"sPaginationType": "full_numbers",
+ 		"sScrollY": 250,
+		"bJQueryUI": true,
+		"bRetrieve":true,
+		"sAjaxSource": "../../server/server/processing.php?sTable=hos_patients",
+		"fnRowCallback": function( nRow, aaData, iDisplayIndex ) {
+			
+			$('td:eq(0)', nRow).html(iDisplayIndex+1);
+			$('td:eq(1)', nRow).html(aaData[1]);
+			$('td:eq(2)', nRow).html(aaData[2]);
+			$('td:eq(3)', nRow).html(aaData[3]);
+			$('td:eq(4)', nRow).html(aaData[4]);
+			$('td:eq(5)', nRow).html(aaData[5]);
+			$('td:eq(6)', nRow).html(aaData[6]);
+			$('td:eq(7)', nRow).html(aaData[7]);
+			$('td:eq(8)', nRow).html("<a href='addpatients_proc.php?id="+aaData[0]+"'><img src='../view.png' alt='view' title='view' />");
+			$('td:eq(9)', nRow).html("<a href='patients.php?delid="+aaData[0]+"' onclick='return confirm(&quot;Are you sure you want to delete?&quot;)'><img src='../trash.png' alt='delete' title='delete' /></a>");
+			return nRow;
+		}
+ 	} );
+ } );
+ </script>
+<table style="clear:both;"  class="tgrid display" id="tbl" width="98%" border="0" cellspacing="0" cellpadding="2" align="center" >
+	<thead>
+		<tr>
+			<th>#</th>
+			<th>Patientno</th>
+			<th>Patient Names</th>
+			<th>Address</th>
+			<th>Email</th>
+			<th>Mobile</th>
+			<th>Gender</th>
+			<th>Age</th>
+			<th>&nbsp;</th>
+			<th>&nbsp;</th>
+		</tr>
+	</thead>
+	<tbody>
+	
+	</tbody>
+</table>
+<?php
+include"../../../foot.php";
+?>

@@ -1,0 +1,33 @@
+<?php
+session_start();
+
+require_once '../../../lib.php';
+
+$sys = $_GET['sys'];
+
+if($sys)
+	redirect("../employeepayments/");
+$page_title="HRM";
+include"../../../head.php";
+?>
+<ul id="cmd-buttons">
+	<li><a class="button icon chat" href="../../hrm/employees/employees.php">Employees</a></li>
+	<li><a class="button icon chat" href="../../hrm/levels/levels.php">HR Levels</a></li>
+	<li><a class="button icon chat" href="../../hrm/assignments/assignments.php">Assignments</a></li>
+	<li><a class="button icon chat" href="../../hrm/documents/documents.php">Documents</a></li>
+	<li><a class="button icon chat" href="../../hrm/departments/departments.php">HRM Departments</a></li>
+	<li><a class="button icon chat" href="../../hrm/leaves/leaves.php">Leave Types</a></li>
+	<li><a class="button icon chat" href="../../hrm/banks/banks.php">Employee Banks</a></li>
+	<li><a class="button icon chat" href="../../hrm/bankbranches/bankbranches.php">Bank Branches</a></li>
+	<li><a class="button icon chat" href="../../hrm/employeeleaveapplications/employeeleaveapplications.php">Leave Applications</a></li>
+	<li><a class="button icon chat" href="../../hrm/contracttypes/contracttypes.php">Contract Types</a></li>
+	<li><a class="button icon chat" href="../../hrm/qualifications/qualifications.php">Qualifications</a></li>
+	<li><a class="button icon chat" href="../../hrm/grades/grades.php">Job Grades</a></li>
+	<li><a class="button icon chat" href="../../hrm/gradings/gradings.php">Qualification Grades</a></li>
+	<li><a class="button icon chat" href="../../hrm/insurances/insurances.php">Insurance</a></li>
+	<li><a class="button icon chat" href="../../hrm/employeestatuss/employeestatuss.php">Employee Status</a></li>
+	<li><a class="button icon chat" href="../../hrm/disciplinarytypes/disciplinarytypes.php">Disciplinary Types</a></li>
+</ul>
+<?php
+include"../../../foot.php";
+?>

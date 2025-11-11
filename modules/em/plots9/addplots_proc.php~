@@ -1,0 +1,490 @@
+<?php 
+session_start();
+require_once("../../../DB.php");
+require_once("../../../lib.php");
+require_once("Plots_class.php");
+require_once("../../auth/rules/Rules_class.php");
+
+
+if(empty($_SESSION['userid'])){;
+	redirect("../../auth/users/login.php");
+}
+
+require_once("../../em/landlords/Landlords_class.php");
+require_once("../../em/actions/Actions_class.php");
+require_once("../../em/regions/Regions_class.php");
+require_once("../../em/types/Types_class.php");
+require_once("../../hrm/employees/Employees_class.php");
+require_once("../../sys/vatclasses/Vatclasses_class.php");
+//Authorization.
+if(!empty($_GET['id'])){
+	$auth->roleid="4137";//<img src="../edit.png" alt="edit" title="edit" />
+}
+else{
+	$auth->roleid="4135";//Add
+}
+$auth->levelid=$_SESSION['level'];
+auth($auth);
+require_once("../../em/houses/Houses_class.php");
+require_once("../../em/hsedescriptions/Hsedescriptions_class.php");
+require_once("../../em/housestatuss/Housestatuss_class.php");
+require_once("../../em/rentalstatuss/Rentalstatuss_class.php");
+require_once("../../em/housetenants/Housetenants_class.php");
+
+//Process delete of houses
+if(!empty($_GET['houses'])){
+	$houses = new Houses();
+	$houses->id=$_GET['houses'];
+	$houses->delete($houses);
+}
+require_once("../../em/plotutilitys/Plotutilitys_class.php");
+require_once("../../em/utilitys/Utilitys_class.php");
+
+//Process delete of plotutilitys
+if(!empty($_GET['plotutilitys'])){
+	$plotutilitys = new Plotutilitys();
+	$plotutilitys->id=$_GET['plotutilitys'];
+	$plotutilitys->delete($plotutilitys);
+}
+
+require_once("../../em/plotspecialdeposits/Plotspecialdeposits_class.php");
+require_once("../../em/paymentterms/Paymentterms_class.php");
+
+//Process delete of plotspecialdeposits
+if(!empty($_GET['plotspecialdeposits'])){
+	$plotspecialdeposits = new Plotspecialdeposits();
+	$plotspecialdeposits->id=$_GET['plotspecialdeposits'];
+	$plotspecialdeposits->delete($plotspecialdeposits);
+}
+
+require_once("../../em/plotpaymentdetails/Plotpaymentdetails_class.php");
+//for merged foreign keys
+require_once("../../sys/paymentmodes/Paymentmodes_class.php");
+require_once("../../em/clientbanks/Clientbanks_class.php");
+
+//connect to db
+$db=new DB();
+$obj=(object)$_POST;
+$ob=(object)$_GET;
+
+$mode=$_GET['mode'];
+if(!empty($mode)){
+	$obj->mode=$mode;
+}
+$id=$_GET['id'];
+$error=$_GET['error'];
+	
+	
+if($obj->action=="Save"){
+	$plots=new Plots();
+	$obj->createdby=$_SESSION['userid'];
+	$obj->createdon=date("Y-m-d H:i:s");
+	$obj->lasteditedby=$_SESSION['userid'];
+	$obj->lasteditedon=date("Y-m-d H:i:s");
+	$error=$plots->validate($obj);
+	if(!empty($error)){
+		$error=$error;
+	}
+	else{
+		$plots=$plots->setObject($obj);
+		if($plots->add($plots)){
+			$error=SUCCESS;
+			redirect("addplots_proc.php?id=".$plots->id."&error=".$error);
+		}
+		else{
+			$error=FAILURE;
+		}
+	}
+}
+	
+if($obj->action=="Update"){
+	$plots=new Plots();
+	$obj->lasteditedby=$_SESSION['userid'];
+	$obj->lasteditedon=date("Y-m-d H:i:s");
+
+	$error=$plots->validate($obj);
+	if(!empty($error)){
+		$error=$error;
+	}
+	else{
+		$plots=$plots->setObject($obj);
+		if($plots->edit($plots)){
+			$error=UPDATESUCCESS;
+			redirect("addplots_proc.php?id=".$plots->id."&error=".$error."#tabs-1");
+		}
+		else{
+			$error=UPDATEFAILURE;
+		}
+	}
+}
+
+//Process adding of houses
+if($obj->action=="Add House"){
+	$houses = new Houses();
+echo $obj->housesdepositmgtfeevatclasseid;
+	$ob->plotid=$obj->id;
+	$ob->createdby=$_SESSION['userid'];
+	$ob->createdon=date("Y-m-d H:i:s");
+	$ob->lasteditedby=$_SESSION['userid'];
+	$ob->lasteditedon=date("Y-m-d H:i:s");
+
+	$ob->hseno=$obj->houseshseno;
+	$ob->rentalstatusid=$obj->housesrentalstatusid;
+	$ob->housestatusid=$obj->houseshousestatusid;
+	$ob->vatable=$obj->housesvatable;
+	$ob->deposit=$obj->housesdeposit;
+	$ob->hsedescriptionid=$obj->houseshsedescriptionid;
+	$ob->wateraccno=$obj->houseswateraccno;
+	$ob->elecaccno=$obj->houseselecaccno;
+	$ob->floor=$obj->housesfloor;
+	$ob->bedrms=$obj->housesbedrms;
+	$ob->size=$obj->housessize;
+	$ob->amount=$obj->housesamount;
+	$ob->hsecode=$obj->houseshsecode;
+	$ob->remarks=$obj->housesremarks;
+	$ob->depositmgtfeevatclasseid=$obj->housesdepositmgtfeevatclasseid;
+
+	$error=$houses->validate($ob);
+	if(!empty($error)){
+		$error=$error;
+	}
+	else{
+		$houses->setObject($ob);
+
+		if($houses->add($houses)){
+			$obj->houseshseno="";
+			$obj->housesrentalstatusid="";
+			$obj->houseshousestatusid="";
+			$obj->housesvatable="";
+			$obj->housesdeposit="";
+			$obj->houseshsedescriptionid="";
+			$obj->houseswateraccno="";
+			$obj->houseselecaccno="";
+			$obj->housesfloor="";
+			$obj->housesbedrms="";
+			$obj->housessize="";
+			$obj->housesamount="";
+			$obj->houseshsecode="";
+			$obj->housesremarks="";
+			$error=SUCCESS;
+		}else{
+			$error=FAILURE;
+		}
+	}
+	//redirect("addplots_proc.php?id=".$obj->id."&error=".$error."#tabs-3");
+}
+
+//Process adding of plotutilitys
+if($obj->action=="Add Plotutility"){
+	$plotutilitys = new Plotutilitys();
+
+	$ob->plotid=$obj->id;
+	$ob->createdby=$_SESSION['userid'];
+	$ob->createdon=date("Y-m-d H:i:s");
+	$ob->lasteditedby=$_SESSION['userid'];
+	$ob->lasteditedon=date("Y-m-d H:i:s");
+
+	$ob->utilityid=$obj->plotutilitysutilityid;
+	$ob->amount=$obj->plotutilitysamount;
+	$ob->showinst=$obj->plotutilitysshowinst;
+	$ob->remarks=$obj->plotutilitysremarks;
+
+	$error=$plotutilitys->validate($ob);
+	if(!empty($error)){
+		$error=$error;
+	}
+	else{
+		$plotutilitys->setObject($ob);
+
+		if($plotutilitys->add($plotutilitys)){
+			$obj->plotutilitysutilityid="";
+			$obj->plotutilitysamount="";
+			$obj->plotutilitysshowinst="";
+			$obj->plotutilitysremarks="";
+			$error=SUCCESS;
+		}else{
+			$error=FAILURE;
+		}
+	}
+	redirect("addplots_proc.php?id=".$obj->id."&error=".$error."#tabs-4");
+}
+
+//Process adding of plotspecialdeposits
+if($obj->action=="Add Plotspecialdeposit"){
+	$plotspecialdeposits = new Plotspecialdeposits();
+
+	$ob->plotid=$obj->id;
+	$ob->createdby=$_SESSION['userid']; 
+	$ob->createdon=date("Y-m-d H:i:s");
+	$ob->lasteditedby=$_SESSION['userid'];
+	$ob->lasteditedon=date("Y-m-d H:i:s");
+
+	$ob->paymenttermid=$obj->plotspecialdepositspaymenttermid;
+	$ob->amount=$obj->plotspecialdepositsamount;
+	$ob->remarks=$obj->plotspecialdepositsremarks;
+
+	$error=$plotspecialdeposits->validate($ob);
+	if(!empty($error)){
+		$error=$error;
+	}
+	else{
+		$plotspecialdeposits->setObject($ob);
+
+		if($plotspecialdeposits->add($plotspecialdeposits)){
+			$obj->plotspecialdepositspaymenttermid="";
+			$obj->plotspecialdepositsamount="";
+			$obj->plotspecialdepositsremarks="";
+			$error=SUCCESS;
+		}else{
+			$error=FAILURE;
+		}
+	}
+	redirect("addplots_proc.php?id=".$obj->id."&error=".$error."#tabs-5");
+}
+
+if($obj->action=="Adjust Rent"){
+	//retrieve all houses under plot and change rent amounts
+	$houses  = new Houses();
+	$fields="*";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$where=" where plotid='$obj->id' ";
+	$houses->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+	while($row=mysql_fetch_object($houses->result)){
+		$ob->houseid=$row->id;
+		$ob->createdby=$_SESSION['userid'];
+		$ob->createdon=date("Y-m-d H:i:s");
+		$ob->lasteditedby=$_SESSION['userid'];
+		$ob->lasteditedon=date("Y-m-d H:i:s");
+		
+		$ob->previous=$row->amount;
+		$ob->enddate=$obj->plotrentsenddate;
+		
+		if($obj->plotrentsincreasetype=="perc")			
+			$ob->current=$row->amount*(100+$obj->plotrentsvalue)/100;
+		else
+			$ob->current=$row->amount+$obj->plotrentsvalue;
+		
+		//add to house rents
+		$houses = new Houses();
+		$fields="*";
+		$having="";
+		$groupby="";
+		$orderby="";
+		$where=" where id='row->id'";
+		$houses->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+		$houses = $houses->fetchObject;
+		$houses->amount=$ob->current;
+		
+		$hse = new Houses();
+		$hse->edit($houses);
+		
+		$houserents = new Houserents();
+		$houserents->add($ob);
+	}
+}
+//Process adding of plotpaymentdetails
+if($obj->actionplotpaymentdetail=="Add Plotpaymentdetail"){
+	$plotpaymentdetails = new Plotpaymentdetails();
+
+	$plotpaymentdetails->plotid=$obj->id;
+	$plotpaymentdetails->createdby=$_SESSION['userid'];
+	$plotpaymentdetails->createdon=date("Y-m-d H:i:s");
+	$plotpaymentdetails->lasteditedby=$_SESSION['userid'];
+	$plotpaymentdetails->lasteditedon=date("Y-m-d H:i:s");
+
+	$error=$plotpaymentdetails->validate($obj);
+	if(!empty($error)){
+		$error=$error;
+	}
+	else{
+		$plotpaymentdetails=$plotpaymentdetails->setObject($obj);
+		if($plotpaymentdetails->add($plotpaymentdetails)){
+			$error=SUCCESS;
+			redirect("addplots_proc.php?id=".$obj->id."&error=".$error."#tabs-2");
+		}
+		else{
+			$error=FAILURE;
+		}
+	}
+}
+
+//Process updating of plotpaymentdetails
+if($obj->actionplotpaymentdetail=="Update Plotpaymentdetail"){
+	$plotpaymentdetails = new Plotpaymentdetails();
+
+	$plotpaymentdetails->plotid=$obj->id;
+	$plotpaymentdetails->createdby=$_SESSION['userid'];
+	$plotpaymentdetails->createdon=date("Y-m-d H:i:s");
+	$plotpaymentdetails->lasteditedby=$_SESSION['userid'];
+	$plotpaymentdetails->lasteditedon=date("Y-m-d H:i:s");
+
+	$error=$plotpaymentdetails->validate($obj);
+	if(!empty($error)){
+		$error=$error;
+	}
+	else{
+		$plotpaymentdetails=$plotpaymentdetails->setObject($obj);
+		if($plotpaymentdetails->edit($plotpaymentdetails)){
+			$error=SUCCESS;
+			redirect("addplots_proc.php?id=".$obj->id."&error=".$error."#tabs-2");
+		}
+		else{
+			$error=FAILURE;
+		}
+	}
+}
+if(empty($obj->action)){
+
+	$landlords= new Landlords();
+	$fields="em_landlords.id, em_landlords.llcode, em_landlords.firstname, em_landlords.middlename, em_landlords.lastname, em_landlords.tel, em_landlords.email, em_landlords.registeredon, em_landlords.fax, em_landlords.mobile, em_landlords.idno, em_landlords.passportno, em_landlords.postaladdress, em_landlords.address, em_landlords.status";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$landlords->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+
+	$actions= new Actions();
+	$fields="em_actions.id, em_actions.name, em_actions.remarks";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$actions->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+
+	$regions= new Regions();
+	$fields="em_regions.id, em_regions.name, em_regions.remarks";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$regions->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+
+	$types= new Types();
+	$fields="em_types.id, em_types.name, em_types.remarks";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$types->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+
+	$employees= new Employees();
+	$fields="hrm_employees.id, hrm_employees.pfnum, concat(concat(hrm_employees.firstname,' ',hrm_employees.middlename),' ',hrm_employees.lastname) names, hrm_employees.dob, hrm_employees.idno, hrm_employees.phoneno, hrm_employees.email, hrm_employees.physicaladdress, hrm_nationalitys.name as nationalityid, hrm_countys.name as countyid, hrm_employees.marital, hrm_employees.spouse, hrm_employees.nssfno, hrm_employees.nhifno, hrm_employees.pinno, hrm_employees.helbno, hrm_employeebanks.name as employeebankid, hrm_employees.bankbrancheid, hrm_employees.bankacc, hrm_employees.clearingcode, hrm_employees.ref, hrm_employees.basic, hrm_assignments.name as assignmentid, hrm_grades.name gradeid, hrm_employeestatuss.name as statusid, hrm_employees.image, hrm_employees.createdby, hrm_employees.createdon, hrm_employees.lasteditedby, hrm_employees.lasteditedon";
+	$join=" left join hrm_nationalitys on hrm_employees.nationalityid=hrm_nationalitys.id  left join hrm_countys on hrm_employees.countyid=hrm_countys.id  left join hrm_employeebanks on hrm_employees.employeebankid=hrm_employeebanks.id  left join hrm_assignments on hrm_employees.assignmentid=hrm_assignments.id left join hrm_grades on hrm_employees.gradeid=hrm_grades.id  left join hrm_employeestatuss on hrm_employees.statusid=hrm_employeestatuss.id ";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$employees->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+}
+
+if(!empty($id)){
+	$plots=new Plots();
+	$where=" where id=$id ";
+	$fields="em_plots.id, em_plots.code, em_plots.landlordid, em_plots.penaltydate, em_plots.actionid, em_plots.noofhouses, em_plots.regionid, em_plots.managefrom, em_plots.managefor, em_plots.indefinite, em_plots.typeid, em_plots.commissiontype, em_plots.commission, em_plots.target, em_plots.name, em_plots.lrno, em_plots.estate, em_plots.road, em_plots.location, em_plots.letarea, em_plots.unusedarea, em_plots.employeeid, em_plots.deposit, em_plots.vatable, em_plots.status, em_plots.remarks";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$plots->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+	$obj=$plots->fetchObject;
+
+	//for merged tables
+	$plotpaymentdetails = new Plotpaymentdetails();
+	$fields=" * ";
+	$where=" where plotid=$id";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$plotpaymentdetails->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+	if(mysql_affected_rows()>0){
+		$obj->actionplotpaymentdetail="Update Plotpaymentdetail";
+	}
+	else{
+		$obj->actionplotpaymentdetail="Add Plotpaymentdetail";
+	}
+	$merge=$plotpaymentdetails->fetchObject;
+
+	$obj = (object) array_merge((array) $obj, (array) $merge);
+	$obj->plotid=$id;
+	$obj->id=$id;
+	//for autocompletes
+	$landlords = new Landlords();
+	$fields=" concat(em_landlords.firstname,' ',concat(em_landlords.middlename,' ',em_landlords.lastname)) name, em_landlords.* ";
+	$where=" where id='$obj->landlordid'";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$landlords->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+	$auto=$landlords->fetchObject;
+
+	$obj->landlordname=$auto->name;
+	$employees = new Employees();
+	$fields=" concat(hrm_employees.firstname,' ',concat(hrm_employees.middlename,' ',hrm_employees.lastname)) name, hrm_employees.* ";
+	$where=" where id='$obj->employeeid'";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$employees->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+	$auto=$employees->fetchObject;
+
+	$obj->employeename=$auto->name;
+}
+if(empty($id) and empty($obj->action)){
+	if(empty($_GET['edit'])){
+		
+		$plots = new Plots();
+		$fields=" (max(id)+1) code ";
+		$join="";
+		$having="";
+		$groupby="";
+		$orderby="";
+		$plots->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+		$ob=$plots->fetchObject;
+		if(empty($ob->code))
+			$ob->code=1;
+		
+		$ob->code = str_pad($ob->code, 4, 0, STR_PAD_LEFT);
+		
+		$obj->code="PLT".$ob->code;
+		
+		$obj->action="Save";
+	}
+	else{
+		$obj=$_SESSION['obj'];
+	}
+	$obj->vatable="No";
+}	
+elseif(!empty($id) and empty($obj->action)){
+	
+	$houses = new Houses();
+	$fields=" (max(id)+1) code ";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$where="";
+	$houses->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+	$oj=$houses->fetchObject;
+	if(empty($oj->code))
+		$oj->code=1;
+	
+	$oj->code = str_pad($oj->code, 4, 0, STR_PAD_LEFT);
+	
+	$obj->houseshsecode="HSE".$oj->code;echo $obj->houseshsecode;
+	
+	$obj->action="Update";
+}
+	
+	
+$page_title="Plots ";
+include "addplots.php";
+?>

@@ -1,0 +1,171 @@
+<?php
+session_start();
+require_once("../../../DB.php");
+require_once("../../../lib.php");
+require_once("Bankreconciliations_class.php");
+require_once("../../auth/rules/Rules_class.php");
+require_once '../banks/Banks_class.php';
+require_once '../generaljournalaccounts/Generaljournalaccounts_class.php';
+require_once '../generaljournals/Generaljournals_class.php';
+
+if(empty($_SESSION['userid'])){;
+	redirect("../../auth/users/login.php");
+}
+
+$page_title="Bank Withdrawal";
+
+include"../../../head.php";
+
+$obj=(object)$_POST;
+if($obj->action=="Withdraw")
+{
+	if($obj->bankid=="Select...")
+	{
+		$error="must select bank";
+	}
+	elseif($obj->accid=="Select...")
+	{
+		$error="must select office control account";
+	}
+	elseif(empty($obj->amount))
+	{
+		$error="must provide amount to withdrawn";
+	}
+	elseif(empty($obj->depositdate))
+	{
+		$error="must give deposit date";
+	}
+	else
+	{
+		$gna1 =new Generaljournalaccounts();
+		$fields="*";
+		$where=" where id='$obj->accid' ";
+		$having="";
+		$groupby="";
+		$orderby="";
+		$gna1->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+		$gna1=$gna1->fetchObject;
+		
+		$gna2 =new Generaljournalaccounts();
+		$fields="*";
+		$where=" where refid='$obj->bankid' and acctypeid='8' ";
+		$having="";
+		$groupby="";
+		$orderby="";
+		$gna2->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+		$gna2=$gna2->fetchObject;
+		
+		//make entries
+		$gn1 = new Generaljournals();
+		$gn1->accountid=$gna1->id;
+		$gn1->daccountid=$gna2->id;
+		$gn1->remarks="Cash Withdrawal";
+		$gn1->transactdate=$obj->depositdate;
+		$gn1->debit=0;
+		$gn1->credit=$obj->amount;
+		$gn1->documentno=$obj->slipno;
+		
+		$gn2 = new Generaljournals();
+		$gn2->accountid=$gna2->id;
+		$gn2->daccountid=$gna1->id;
+		$gn2->remarks="Cash Withdrawal";
+		$gn2->transactdate=$obj->depositdate;
+		$gn2->debit=$obj->amount;
+		$gn2->credit=0;
+		$gn2->documentno=$obj->slipno;
+		
+		$gn = new Generaljournals();
+		if($gn->add($gn1))
+		{
+			$gn2->did=$gn->id;
+			$gns = new Generaljournals();
+			$gns->add($gn2);
+			
+			$gn1->did=$gns->id;
+			$gn->edit($gn1);
+			
+			$error="Successfully recorded withdrawal";
+			$obj="";
+		}
+		else
+		{
+			$error="could not record withdrawal";
+		}
+	}
+}
+
+?>
+ <form action="withdrawals.php" method="post" class="forms">
+            <table width="80%" border="0" align="center">
+              <tr>
+                <th colspan="2"><div align="center"><strong>Record a Deposit from Bank to Cash Box</strong></div></th>
+                </tr>
+              <tr>
+                <td width="46%"><div align="right"><strong>Bank Involved</strong></div></td>
+                <td width="54%"><select name="bankid" id="bankid" class="selectbox">
+            <option>Select...</option>
+            <?php
+                $banks = new Banks();
+                $fields="*";
+                $where="";
+                $having="";
+                $orderby="";
+                $groupby="";
+                $banks->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+                
+                while($row=mysql_fetch_object($banks->result))
+                {
+                ?>
+                    <option value="<?php echo $row->id; ?>"<?php if($obj->bankid==$row->id){echo"selected";}?>><?php echo $row->name; ?>&nbsp;<?php echo $row->bankbranch; ?>[<?php echo $row->bankacc; ?>]</option>
+                    <?
+                }
+                ?>
+                  </select>&nbsp;</td>
+              </tr>
+              <tr>
+                <td width="46%"><div align="right"><strong>Office Control</strong></div></td>
+                <td width="54%"><select name="accid" id="accid" class="selectbox">
+            <option>Select...</option>
+            <?php
+                $banks = new generaljournalaccounts();
+                $fields="*";
+                $where=" where acctypeid='24' ";
+                $having="";
+                $orderby="";
+                $groupby="";
+                $banks->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+                
+                while($row=mysql_fetch_object($banks->result))
+                {
+                ?>
+                    <option value="<?php echo $row->id; ?>"<?php if($obj->accid==$row->id){echo"selected";}?>><?php echo $row->name; ?></option>
+                    <?
+                }
+                ?>
+                  </select>&nbsp;</td>
+              </tr>
+              <tr>
+                <td><div align="right"><strong>Amount Withdrawn:</strong></div></td>
+                <td><input name="amount" type="text" id="amount" value="<?php echo $obj->amount; ?>" /></td>
+              </tr>
+              <tr>
+                <td><div align="right"><strong>Date Withdrawn</strong></div></td>
+                <td> <input name="depositdate" type="text" class="date_input" readonly="readonly" id="depositdate" value="<?php echo $obj->depositdate; ?>" size="8" />&nbsp;</td>
+              </tr>
+              <tr>
+                <td><div align="right"><strong>Withdrawal Slip No:</strong></div></td>
+                <td><input name="slipno" type="text" id="slipno" value="<?php echo $obj->slipno; ?>" /></td>
+              </tr>
+              <tr>
+                <td colspan="2"><div align="center"><?php showError($error); ?></div></td>
+                </tr>
+              <tr>
+                <td colspan="2"><div align="center">
+                  <input type="submit" name="action" id="action" value="Withdraw" />
+                </div></td>
+                </tr>
+                <tr>
+                <th colspan="2">&nbsp;</th>
+                </tr>
+            </table>
+            </form>

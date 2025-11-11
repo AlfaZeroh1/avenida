@@ -1,0 +1,19 @@
+<?php
+session_start();
+
+$page_title="Plots";
+include"../../../head.php";
+?>
+<ul id="cmd-buttons">
+	<li><a href="../../em/tenantpayments/tenantpayments.php">Tenant Payments</a></li>
+	<li><a href="../../em/houses/houses.php">Houses</a></li>
+	<li><a href="../../em/houserentings/houserentings.php">Rentings</a></li>
+	<li><a href="../../em/landlords/landlords.php">Landlords</a></li>
+	<li><a href="../../em/plots/plots.php">Plots</a></li>
+	<li><a href="../../em/tenants/tenants.php">Tenants</a></li>
+	<li><a href="../../em/auctioneers/auctioneers.php">Auctioneers</a></li>
+	<li><a href="../../em/payablehouserents/invoicing.php">Batch Invoicing</a></li>
+</ul>
+<?php
+include"../../../foot.php";
+?>

@@ -1,0 +1,217 @@
+<title>WiseDigits: Tenders </title>
+<?php 
+include "../../../head.php";
+
+?>
+<script type="text/javascript">
+$().ready(function() {
+ $("#employeename").autocomplete("../../../modules/server/server/search.php?main=hrm&module=employees&field=concat(hrm_employees.firstname,' ',concat(hrm_employees.middlename,' ',hrm_employees.lastname))", {
+ 	width: 260,
+ 	selectFirst: false
+ });
+ $("#employeename").result(function(event, data, formatted) {
+   if (data)
+   {
+     document.getElementById("employeename").value=data[0];
+     document.getElementById("employeeid").value=data[1];
+   }
+ });
+});
+<?php include'js.php'; ?>
+</script>
+ <script type="text/javascript" charset="utf-8">
+ $(document).ready(function() {
+ 	$('#tbl').dataTable( {
+ 		"sScrollY": 180,
+ 		"bJQueryUI": true,
+ 		"bSort":false,
+ 		"sPaginationType": "full_numbers"
+ 	} );
+ } );
+ </script>
+
+<div class='main'>
+<form class="forms" id="theform" action="addtenders_proc.php" name="tenders" method="POST" enctype="multipart/form-data">
+	<table width="100%" class="titems gridd" border="0" align="center" cellpadding="2" cellspacing="0" id="tblSample">
+ <?php if(!empty($obj->retrieve)){?>
+	<tr>
+		<td colspan="4" align="center"><input type="hidden" name="retrieve" value="<?php echo $obj->retrieve; ?>"/>Document No:<input type="text" size="4" name="invoiceno"/>&nbsp;<input type="submit" name="action" value="Filter"/></td>
+	</tr>
+	<?php }?>
+	<tr>
+		<td colspan="2"><input type="hidden" name="id" id="id" value="<?php echo $obj->id; ?>"></td>
+	</tr>
+	<tr>
+		<td align="right">Proposal No : </td>
+		<td><input type="text" name="proposalno" id="proposalno" value="<?php echo $obj->proposalno; ?>"></td>
+	</tr>
+	<tr>
+		<td align="right">Tender Description : </td>
+		<td><textarea name="name"><?php echo $obj->name; ?></textarea><font color='red'>*</font></td>
+	</tr>
+	<tr>
+		<td align="right">Tender Type : </td>
+			<td><select name="tendertypeid">
+<option value="">Select...</option>
+<?php
+	$tendertypes=new Tendertypes();
+	$where="  ";
+	$fields="tender_tendertypes.id, tender_tendertypes.name, tender_tendertypes.description, tender_tendertypes.remarks, tender_tendertypes.ipaddress, tender_tendertypes.createdby, tender_tendertypes.createdon, tender_tendertypes.lasteditedby, tender_tendertypes.lasteditedon";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$tendertypes->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+	while($rw=mysql_fetch_object($tendertypes->result)){
+	?>
+		<option value="<?php echo $rw->id; ?>" <?php if($obj->tendertypeid==$rw->id){echo "selected";}?>><?php echo initialCap($rw->name);?></option>
+	<?php
+	}
+	?>
+</select>
+		</td>
+	</tr>
+	<tr>
+		<td align="right">Date Received : </td>
+		<td><input type="text" name="datereceived" id="datereceived" class="date_input" size="12" readonly  value="<?php echo $obj->datereceived; ?>"></td>
+	</tr>
+	<tr>
+		<td align="right">Action Plan Date : </td>
+		<td><input type="text" name="actionplandate" id="actionplandate" class="date_input" size="12" readonly  value="<?php echo $obj->actionplandate; ?>"></td>
+	</tr>
+	<tr>
+		<td align="right">Date Of Review : </td>
+		<td><input type="text" name="dateofreview" id="dateofreview" class="date_input" size="12" readonly  value="<?php echo $obj->dateofreview; ?>"></td>
+	</tr>
+	<tr>
+		<td align="right">Date Of Submission : </td>
+		<td><input type="text" name="dateofsubmission" id="dateofsubmission" class="date_input" size="12" readonly  value="<?php echo $obj->dateofsubmission; ?>"></td>
+	</tr>
+	<tr>
+		<td align="right">Reviewed By : </td>
+			<td><input type='text' size='20' name='employeename' id='employeename' value='<?php echo $obj->employeename; ?>'>
+			<input type="hidden" name='employeeid' id='employeeid' value='<?php echo $obj->employeeid; ?>'>
+		</td>
+	</tr>
+	<tr>
+		<td align="right">Status : </td>
+			<td><select name="Statusid">
+<option value="">Select...</option>
+<?php
+	$statuss=new Statuss();
+	$where="  ";
+	$fields="tender_statuss.id, tender_statuss.name, tender_statuss.remarks, tender_statuss.ipaddress, tender_statuss.createdby, tender_statuss.createdon, tender_statuss.lasteditedby, tender_statuss.lasteditedon";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$statuss->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+	while($rw=mysql_fetch_object($statuss->result)){
+	?>
+		<option value="<?php echo $rw->id; ?>" <?php if($obj->Statusid==$rw->id){echo "selected";}?>><?php echo initialCap($rw->name);?></option>
+	<?php
+	}
+	?>
+</select>
+		</td>
+	</tr>
+	<tr>
+		<td align="right">Remarks : </td>
+		<td><textarea name="remarks"><?php echo $obj->remarks; ?></textarea></td>
+	</tr>
+	<tr>
+		<td colspan="2" align="center"><input type="submit" name="action" id="action" value="<?php echo $obj->action; ?>">&nbsp;<input type="submit" name="action" id="action" value="Cancel" onclick="window.top.hidePopWin(true);"/></td>
+	</tr>
+<?php if(!empty($obj->id)){?>
+	<tr>
+		<th colspan='2'>Documents </th>
+	</tr>
+	<tr>
+	<td colspan='2'>
+	<table>
+	<tr>
+		<td align="right">Tender : </td>
+<input type='hidden' name='tenderid' value='<?php echo $obj->tenderid; ?>'/>
+<font color='red'>*</font>
+		</td>
+		<td align="right">Document Type : </td>
+			<td><select name="documenttypeid">
+<option value="">Select...</option>
+<?php
+	$documenttypes=new Documenttypes();
+	$where="  ";
+	$fields="dms_documenttypes.id, dms_documenttypes.name, dms_documenttypes.moduleid, dms_documenttypes.remarks, dms_documenttypes.ipaddress, dms_documenttypes.createdby, dms_documenttypes.createdon, dms_documenttypes.lasteditedby, dms_documenttypes.lasteditedon";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$documenttypes->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+	while($rw=mysql_fetch_object($documenttypes->result)){
+	?>
+		<option value="<?php echo $rw->id; ?>" <?php if($obj->documenttypeid==$rw->id){echo "selected";}?>><?php echo initialCap($rw->name);?></option>
+	<?php
+	}
+	?>
+</select><font color='red'>*</font>
+		</td>
+	<tr>
+		<td align="right">Title : </td>
+		<td><input type="text" name="title" id="title" value="<?php echo $obj->title; ?>"><font color='red'>*</font></td>
+		<td align="right">Upload File : </td>
+		<td><input type="text" name="file" id="file" value="<?php echo $obj->file; ?>"></td>
+	<tr>
+		<td align="right">Remarks : </td>
+		<td><textarea name="remarks"><?php echo $obj->remarks; ?></textarea></td>
+	</table>
+	</td>
+	</tr>
+	<tr>
+		<td colspan="2" align="center"><input type="submit" value="<?php echo $obj->actiondocument;?>" name="actiondocument"/>&nbsp;<input type="button" id="action" value="Cancel" onclick="window.top.hidePopWin(true);"/></td>
+	</tr>
+	<tr>
+		<th colspan='2'>Checklists </th>
+	</tr>
+	<tr>
+	<td colspan='2'>
+	<table>
+	<tr>
+		<td align="right">Responsibility : </td>
+		<td><textarea name="action"><?php echo $obj->action; ?></textarea><font color='red'>*</font></td>
+		<td align="right">Tender : </td>
+<input type='hidden' name='tenderid' value='<?php echo $obj->tenderid; ?>'/>
+
+		</td>
+	<tr>
+		<td align="right">Description : </td>
+		<td><textarea name="description"><?php echo $obj->description; ?></textarea></td>
+		<td align="right">Deadline : </td>
+		<td><input type="text" name="deadline" id="deadline" class="date_input" size="12" readonly  value="<?php echo $obj->deadline; ?>"></td>
+	<tr>
+		<td align="right">Status : </td>
+		<td><input type="text" name="status" id="status" value="<?php echo $obj->status; ?>"></td>
+		<td align="right">Date Done : </td>
+		<td><input type="text" name="doneon" id="doneon" class="date_input" size="12" readonly  value="<?php echo $obj->doneon; ?>"></td>
+	<tr>
+		<td align="right"> : </td>
+		<td><input type="text" name="completedon" id="completedon" class="date_input" size="12" readonly  value="<?php echo $obj->completedon; ?>"></td>
+		<td align="right">Remarks : </td>
+		<td><textarea name="remarks"><?php echo $obj->remarks; ?></textarea></td>
+	</table>
+	</td>
+	</tr>
+	<tr>
+		<td colspan="2" align="center"><input type="submit" value="<?php echo $obj->actionchecklist;?>" name="actionchecklist"/>&nbsp;<input type="button" id="action" value="Cancel" onclick="window.top.hidePopWin(true);"/></td>
+	</tr>
+<?php }?>
+	<?php if(!empty($obj->id)){?> 
+<?php }?>
+</table>
+</form>
+<?php 
+if(!empty($error)){
+	showError($error);
+}
+?>

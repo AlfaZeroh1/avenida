@@ -1,0 +1,92 @@
+<?php
+session_start();
+require_once("../../../DB.php");
+require_once("../../../lib.php");
+require_once("Patientprescriptions_class.php");
+
+
+if(empty($_SESSION['userid'])){;
+	redirect("../../auth/users/login.php");
+}
+
+$page_title="Patientprescriptions";
+//connect to db
+$db=new DB();
+include"../../../head.php";
+
+$delid=$_GET['delid'];
+$patientprescriptions=new Patientprescriptions();
+if(!empty($delid)){
+	$patientprescriptions->id=$delid;
+	$patientprescriptions->delete($patientprescriptions);
+	redirect("patientprescriptions.php");
+}
+$obj = (object)$_POST;
+$treatmentid=$_GET['treatmentid'];
+$id=$_GET['id'];
+
+if(!empty($treatmentid)){
+	$obj->treatmentid=$treatmentid;
+}
+if(!empty($id)){
+	mysql_query("update hos_patientprescriptions set issued=1 where id='$id'");
+	mysql_query("update $db->db.items set quantity=quantity-$quantity where id='$id'");
+}
+?>
+
+<form action="patientprescriptions.php" class="forms" method="post">
+<table align="center" style="margin-left:35%;">
+	<tr>
+		<td>Treatment No:<input type="text" size="12" name="treatmentid" value="<?php echo $obj->treatmentid; ?>"/>
+						<input class="btn" type="submit" name="action" value="Search"/></td>
+	</tr>
+</table>
+</form>
+<table style="clear:both;"  class="tgrid display" id="example" width="98%" border="0" cellspacing="0" cellpadding="2" align="center" >
+	<thead>
+		<tr>
+			<th>#</th>
+			<th>Item</th>
+			<th>Quantity</th>
+			<th>Price</th>
+			<th>Frequency</th>
+			<th>Duration(days)</th>
+			<th>&nbsp;</th>
+		</tr>
+	</thead>
+	<tbody>
+	<?php
+		$i=0;
+		$fields="hos_patientprescriptions.id, $db->db.items.itemname as itemid, hos_patienttreatments.id as patienttreatmentid, hos_patientprescriptions.quantity,hos_patientprescriptions.frequency,hos_patientprescriptions.duration, hos_patientprescriptions.price, hos_patientprescriptions.issued, hos_patientprescriptions.createdby, hos_patientprescriptions.createdon, hos_patientprescriptions.lasteditedby, hos_patientprescriptions.lasteditedon";
+		$join=" left join $db->db.items on hos_patientprescriptions.itemid=items.id  left join hos_patienttreatments on hos_patientprescriptions.patienttreatmentid=hos_patienttreatments.id ";
+		$having="";
+		$groupby="";
+		$orderby="";
+		$where=" where hos_patienttreatments.id='$obj->treatmentid' ";
+		$patientprescriptions->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+		$res=$patientprescriptions->result;
+		while($row=mysql_fetch_object($res)){
+		$i++;
+	?>
+		<tr>
+			<td><?php echo $i; ?></td>
+			<td><?php echo $row->itemid; ?></td>
+			<td><?php echo $row->quantity; ?></td>
+			<td><?php echo formatNumber($row->price); ?></td>
+			<td><?php echo $row->frequency; ?></td>
+			<td><?php echo $row->duration; ?></td>
+			
+			<?php if($row->issued==0){?>
+			<td><a href="patientprescriptions.php?treatmentid=<?php echo $obj->treatmentid; ?>&id=<?php echo $row->id; ?>">Issue</a></td>
+			<?php }else{?>
+			<td>&nbsp;</td>
+			<?php }?>
+		</tr>
+	<?php 
+	}
+	?>
+	</tbody>
+</table>
+<?php
+include"../../../foot.php";
+?>

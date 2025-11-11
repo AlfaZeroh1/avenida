@@ -1,0 +1,134 @@
+<?php 
+session_start();
+require_once("../../../DB.php");
+require_once("../../../lib.php");
+require_once("Cashrequisitiondetails_class.php");
+require_once("../../auth/rules/Rules_class.php");
+
+
+if(empty($_SESSION['userid'])){;
+	redirect("../../auth/users/login.php");
+}
+
+require_once("../../fn/cashrequisitions/Cashrequisitions_class.php");
+require_once("../../fn/expenses/Expenses_class.php");
+//Authorization.
+if(!empty($_GET['id'])){
+	$auth->roleid="8453";//Edit
+}
+else{
+	$auth->roleid="8451";//Add
+}
+$auth->levelid=$_SESSION['level'];
+auth($auth);
+
+
+//connect to db
+$db=new DB();
+$obj=(object)$_POST;
+$ob=(object)$_GET;
+
+$mode=$_GET['mode'];
+if(!empty($mode)){
+	$obj->mode=$mode;
+}
+$id=$_GET['id'];
+$error=$_GET['error'];
+if(!empty($_GET['retrieve'])){
+	$obj->retrieve=$_GET['retrieve'];
+}
+	
+	
+if($obj->action=="Save"){
+	$cashrequisitiondetails=new Cashrequisitiondetails();
+	$obj->createdby=$_SESSION['userid'];
+	$obj->createdon=date("Y-m-d H:i:s");
+	$obj->lasteditedby=$_SESSION['userid'];
+	$obj->lasteditedon=date("Y-m-d H:i:s");
+	$obj->ipaddress=$_SERVER['REMOTE_ADDR'];
+	$error=$cashrequisitiondetails->validate($obj);
+	if(!empty($error)){
+		$error=$error;
+	}
+	else{
+		$cashrequisitiondetails=$cashrequisitiondetails->setObject($obj);
+		if($cashrequisitiondetails->add($cashrequisitiondetails)){
+			$error=SUCCESS;
+			redirect("addcashrequisitiondetails_proc.php?id=".$cashrequisitiondetails->id."&error=".$error);
+		}
+		else{
+			$error=FAILURE;
+		}
+	}
+}
+	
+if($obj->action=="Update"){
+	$cashrequisitiondetails=new Cashrequisitiondetails();
+	$obj->lasteditedby=$_SESSION['userid'];
+	$obj->lasteditedon=date("Y-m-d H:i:s");
+
+	$error=$cashrequisitiondetails->validate($obj);
+	if(!empty($error)){
+		$error=$error;
+	}
+	else{
+		$cashrequisitiondetails=$cashrequisitiondetails->setObject($obj);
+		if($cashrequisitiondetails->edit($cashrequisitiondetails)){
+			$error=UPDATESUCCESS;
+			redirect("addcashrequisitiondetails_proc.php?id=".$cashrequisitiondetails->id."&error=".$error);
+		}
+		else{
+			$error=UPDATEFAILURE;
+		}
+	}
+}
+if(empty($obj->action)){
+
+	$cashrequisitions= new Cashrequisitions();
+	$fields="fn_cashrequisitions.id, fn_cashrequisitions.documentno, fn_cashrequisitions.projectid, fn_cashrequisitions.employeeid, fn_cashrequisitions.description, fn_cashrequisitions.status, fn_cashrequisitions.remarks, fn_cashrequisitions.ipaddress, fn_cashrequisitions.createdby, fn_cashrequisitions.createdon, fn_cashrequisitions.lasteditedby, fn_cashrequisitions.lasteditedon";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$cashrequisitions->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+
+	$expenses= new Expenses();
+	$fields="fn_expenses.id, fn_expenses.name, fn_expenses.code, fn_expenses.expensetypeid, fn_expenses.expensecategoryid, fn_expenses.description, fn_expenses.ipaddress, fn_expenses.createdby, fn_expenses.createdon, fn_expenses.lasteditedby, fn_expenses.lasteditedon";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$expenses->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+}
+
+if(!empty($id)){
+	$cashrequisitiondetails=new Cashrequisitiondetails();
+	$where=" where id=$id ";
+	$fields="fn_cashrequisitiondetails.id, fn_cashrequisitiondetails.cashrequisitionid, fn_cashrequisitiondetails.expenseid, fn_cashrequisitiondetails.quantity, fn_cashrequisitiondetails.amount, fn_cashrequisitiondetails.total, fn_cashrequisitiondetails.ipaddress, fn_cashrequisitiondetails.createdby, fn_cashrequisitiondetails.createdon, fn_cashrequisitiondetails.lasteditedby, fn_cashrequisitiondetails.lasteditedon";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$cashrequisitiondetails->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+	$obj=$cashrequisitiondetails->fetchObject;
+
+	//for autocompletes
+}
+if(empty($id) and empty($obj->action)){
+	if(empty($_GET['edit'])){
+		$obj->action="Save";
+	}
+	else{
+		$obj=$_SESSION['obj'];
+	}
+}	
+elseif(!empty($id) and empty($obj->action)){
+	$obj->action="Update";
+}
+	
+	
+$page_title="Cashrequisitiondetails ";
+include "addcashrequisitiondetails.php";
+?>

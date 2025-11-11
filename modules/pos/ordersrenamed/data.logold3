@@ -1,0 +1,41 @@
+=======================551904:551904
+551904: ORDER
+ Failed to print. Command "smbclient '//AVENIDA-PC/Barprinter' -c 'print -' -N" failed with exit code 1: Connection to AVENIDA-PC failed (Error NT_STATUS_IO_TIMEOUT)
+551904: CUSTOMER COPY
+ Failed to print. Command "smbclient '//AVENIDA-PC/Barprinter' -c 'print -' -N" failed with exit code 1: Connection to AVENIDA-PC failed (Error NT_STATUS_IO_TIMEOUT)
+=======================551905:551905
+551905: ORDER
+ Failed to print. Command "smbclient '//AVENIDA-PC/Barprinter' -c 'print -' -N" failed with exit code 1: Connection to AVENIDA-PC failed (Error NT_STATUS_IO_TIMEOUT)
+551905: CUSTOMER COPY
+ Failed to print. Command "smbclient '//AVENIDA-PC/Barprinter' -c 'print -' -N" failed with exit code 1: Connection to AVENIDA-PC failed (Error NT_STATUS_IO_TIMEOUT)
+=======================551906:551906
+551906: KITCHEN ORDER
+ Failed to print. Command "smbclient '//CASHIER-PC/kitchen' -c 'print -' -N" failed with exit code 1: Connection to CASHIER-PC failed (Error NT_STATUS_IO_TIMEOUT)
+551906: CUSTOMER COPY
+ Failed to print. Command "smbclient '//CASHIER-PC/kitchen' -c 'print -' -N" failed with exit code 1: Connection to CASHIER-PC failed (Error NT_STATUS_IO_TIMEOUT)
+551906: CAPTAIN ORDER
+ Failed to print. Command "smbclient '//CASHIER-PC/kitchen' -c 'print -' -N" failed with exit code 1: Connection to CASHIER-PC failed (Error NT_STATUS_IO_TIMEOUT)
+=======================551907:551907
+551907: ORDER
+ Printer 'smb:' is not a valid printer name. Use local port (LPT1, COM1, etc) or smb://computer/printer notation.
+551907: CUSTOMER COPY
+ Printer 'smb:' is not a valid printer name. Use local port (LPT1, COM1, etc) or smb://computer/printer notation.
+=======================551908:551908
+551908: ORDER
+ Failed to print. Command "smbclient '//AVENIDA-PC/Barprinter' -c 'print -' -N" failed with exit code 1: Connection to AVENIDA-PC failed (Error NT_STATUS_IO_TIMEOUT)
+551908: CUSTOMER COPY
+ Failed to print. Command "smbclient '//AVENIDA-PC/Barprinter' -c 'print -' -N" failed with exit code 1: Connection to AVENIDA-PC failed (Error NT_STATUS_IO_TIMEOUT)
+=======================551909:551909
+551909: ORDER
+ Failed to print. Command "smbclient '//AVENIDA-PC/Barprinter' -c 'print -' -N" failed with exit code 1: Connection to AVENIDA-PC failed (Error NT_STATUS_IO_TIMEOUT)
+551909: CUSTOMER COPY
+ Failed to print. Command "smbclient '//AVENIDA-PC/Barprinter' -c 'print -' -N" failed with exit code 1: Connection to AVENIDA-PC failed (Error NT_STATUS_IO_TIMEOUT)
+=======================551910:551910
+551910: ORDER
+ Failed to print. Command "smbclient '//AVENIDA-PC/Barprinter' -c 'print -' -N" failed with exit code 1: Connection to AVENIDA-PC failed (Error NT_STATUS_IO_TIMEOUT)
+551910: CUSTOMER COPY
+ Failed to print. Command "smbclient '//AVENIDA-PC/Barprinter' -c 'print -' -N" failed with exit code 1: Connection to AVENIDA-PC failed (Error NT_STATUS_IO_TIMEOUT)
+=======================551912:551912
+551912 : 1 => 30 = 18:25:50 == Archils Amachi Ouma == 445 :smb://CASHIER-PC/kitchen
+551912 : 2 => 30 = 18:26:00 == Archils Amachi Ouma == 445 :smb://CASHIER-PC/kitchen
+551912 : 3 => 30 = 18:26:10 == Archils Amachi Ouma == 445 :smb://CASHIER-PC/kitchen

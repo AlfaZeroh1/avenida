@@ -1,0 +1,246 @@
+<?php
+session_start();
+require_once("../../../DB.php");
+require_once("../../../ToWords.php");
+require_once("../../../lib.php");
+require_once '../../em/tenants/Tenants_class.php';
+require_once 'Tenantpayments_class.php';
+require_once("../../fn/generaljournals/Generaljournals_class.php");
+
+$tenant = $_GET['tenant'];
+$doc=$_GET['doc'];
+$paidon=$_GET['paidon'];
+$copy=$_GET['copy'];
+$total= $_GET['total'];
+
+$tenants = new Tenants();
+$fields = "*";
+$where=" where id='$tenant' ";
+$join="";
+$having="";
+$groupby="";
+$orderby="";
+$tenants->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+$tenants=$tenants->fetchObject;
+
+$tenantpayments = new Tenantpayments();
+$fields="concat(em_plots.code,' ',em_plots.name) plotid, em_houses.hseno as houseid,em_tenantpayments.paidby, em_tenantpayments.paidon, sys_paymentmodes.name paymentmodeid,fn_banks.name bankid,em_tenantpayments.chequeno ";
+$join=" left join em_tenants on em_tenantpayments.tenantid=em_tenants.id  left join em_houses on em_tenantpayments.houseid=em_houses.id left join em_plots on em_plots.id=em_houses.plotid  left join em_paymentterms on em_tenantpayments.paymenttermid=em_paymentterms.id  left join sys_paymentmodes on em_tenantpayments.paymentmodeid=sys_paymentmodes.id  left join fn_banks on em_tenantpayments.bankid=fn_banks.id ";
+$having="";
+$groupby="";
+$orderby="";
+$where=" where em_tenantpayments.documentno='$doc' ";	
+$tenantpayments->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+$tn=$tenantpayments->fetchObject;
+
+$generaljournals = new Generaljournals();
+$fields=" sum(fn_generaljournals.debit)-sum(fn_generaljournals.credit) amount";
+$join=" left join fn_generaljournalaccounts on fn_generaljournalaccounts.id=fn_generaljournals.accountid ";
+$where=" where fn_generaljournalaccounts.refid='$tenant' and fn_generaljournalaccounts.acctypeid='32'  ";
+$having=" ";
+$groupby="";
+$orderby="";
+$generaljournals->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+$generaljournals=$generaljournals->fetchObject;
+
+$balance=$generaljournals->amount;
+?>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="shortcut icon" href="favicon.png">
+
+    <title></title>
+    
+    <script type="text/javascript">
+   function print_doc()
+  {
+		
+  		var printers = jsPrintSetup.getPrintersList().split(',');
+		// Suppress print dialog
+		jsPrintSetup.setSilentPrint(false);/** Set silent printing */
+
+		var i;
+		for(i=0; i<printers.length;i++)
+		{//alert(i+": "+printers[i]);
+		//alert(printers[i]+"="+'<?php echo $_SESSION["smallprinter"];?>');
+			if(printers[i].indexOf('<?php echo $_SESSION["smallprinter"];?>')>-1)
+			{	//alert(i+": "+printers[i]);
+				jsPrintSetup.setPrinter(printers[i]);
+			}
+			
+		}
+		//set number of copies to 2
+		jsPrintSetup.setOption('numCopies',1);
+		jsPrintSetup.setOption('headerStrCenter','');
+		jsPrintSetup.setOption('headerStrRight','');
+		jsPrintSetup.setOption('headerStrLeft','');
+		jsPrintSetup.setOption('footerStrCenter','');
+		jsPrintSetup.setOption('footerStrRight','');
+		jsPrintSetup.setOption('footerStrLeft','');
+		jsPrintSetup.setOption('marginLeft','0');
+		jsPrintSetup.setOption('marginRight','0');
+		jsPrintSetup.setOption('marginTop','-2');
+		jsPrintSetup.setOption('marginBottom','0');
+		// Do Print
+		jsPrintSetup.printWindow(window);
+		
+		//window.close();
+		//window.top.hidePopWin(true);
+		// Restore print dialog
+		//jsPrintSetup.setSilentPrint(false); /** Set silent printing back to false */
+ 
+  }
+ </script>
+	
+	<style type="text/css" media="all">
+	body{font-family:'tahoma';font-size:10px;}
+	
+	table {border:1px solid;width:100%;margin:0px;padding:0px;}
+	/*td{border:1px solid #ccc;}
+	tr{border:1px solid;}*/
+	
+	</style>
+  </head>
+<!-- NAVBAR
+================================================== -->
+  <body onload="print_doc();">
+<table style="height:300px !important;">
+<tr style="height:40px !important;" >
+<td width="20%" align="center" valign="top"><img src="../../../images/logo.png" alt="master ways" height="60" width="81" /><br />
+<strong>Receipt No: <?php echo $doc; ?> - <?php
+            if($_GET['copy']==1){
+				?>
+				- Copy
+				<?php 
+			}
+			else{
+?> - Original<?php } ?></strong></td>
+<td width="60%" valign="top" align="center">
+<table style="height:40px !important;">
+<tr><td align="center" colspan="2">
+<p><strong>MASTERWAYS PROPERTIES LTD<br/>
+Property Consultants,Registered Estate & Managing Agents</strong></p>
+</td></tr>
+<tr>
+<td style="border:1px solid #000;" width="50%"><p><strong>CODE NO.:</strong> <?php echo $tenants->code; ?> </p></td>
+<td style="border:1px solid #000;" width="50%"><p><strong>VAT NO.:</strong> <?php echo $_SESSION['companyvat']; ?> <br/>
+<strong>PIN NO.:</strong><?php echo $_SESSION['companypin']; ?></p></td>
+
+</tr>
+</table>
+</td>
+<td width="20%" valign="top" align="right" style="font-size:10px;">
+<p>Old Mutual Building, 2nd Floor,<br/>
+Kimathi Street<br/>
+PO Box 38715-00600<br/>
+Nairobi-Kenya <br/>
+Tel:310459,310482,310483<br/>
+Email: info@masterways.co.ke<br/>
+Website: www.masterways.co.ke<br/>
+</p>
+
+</td>
+</tr>
+
+<tr height="30px;">
+<td valign="top" colspan="10">
+<table>
+<thead>
+<th>Date of Payment: </th>
+<th>Received With Thanks From: </th>
+<th>Unit Name:&nbsp;</th>
+<th>Client Name:</th>
+</thead>
+<tbody>
+<tr align="center">
+<td><?php echo formatDate($paidon);?></td>
+<td><?php echo $tenants->code; ?>&nbsp;<?php echo $tenants->firstname; ?>&nbsp;<?php echo $tenants->middlename; ?>&nbsp;<?php echo $tenants->lastname; ?></td>
+<td><?php echo $tn->houseid; ?>&nbsp;</td>
+<td><?php echo $tn->plotid; ?></td>
+</tr>
+</tbody>
+</table>
+</td>
+<tr><td colspan="10">
+<table style="border:0px;">
+<tr> 
+<td width="50%" style=""><strong>The Amount Of Kshs: <?php echo formatNumber($total); ?>.</strong></td>
+<td width="50%" style=""><strong>In Words: <?php $to = new toWords($total); echo initialCap($to->words); ?>.</strong></td>
+</tr>
+</table>
+
+</td></tr>
+</tr>
+<tr>
+<td colspan="10" valign="top">
+<table>
+<tr>
+<td valign="top" align="left" style="margin-right:10px;">
+<table style="border:0px;">
+
+<thead>
+<th>Payment Description</th>
+<th>Paid</th>
+</thead>
+<tbody>
+<?
+    $tenantpayments = new Tenantpayments();
+    $fields="em_tenantpayments.id,  em_plots.name plotid, em_houses.hseno as houseid, em_tenantpayments.documentno, em_paymentterms.name as paymenttermid, sys_paymentmodes.name as paymentmodeid, fn_banks.name as bankid, em_tenantpayments.chequeno, em_tenantpayments.amount, em_tenantpayments.paidon, em_tenantpayments.month, em_tenantpayments.year, em_tenantpayments.paidby, em_tenantpayments.remarks";
+	$join=" left join em_tenants on em_tenantpayments.tenantid=em_tenants.id  left join em_houses on em_tenantpayments.houseid=em_houses.id left join em_plots on em_plots.id=em_houses.plotid  left join em_paymentterms on em_tenantpayments.paymenttermid=em_paymentterms.id  left join sys_paymentmodes on em_tenantpayments.paymentmodeid=sys_paymentmodes.id  left join fn_banks on em_tenantpayments.bankid=fn_banks.id ";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$where=" where em_tenantpayments.documentno='$doc' ";
+	$tenantpayments->retrieve($fields,$join,$where,$having,$groupby,$orderby);echo mysql_error();
+	$res=$tenantpayments->result;
+	$total=0;
+	while($row=mysql_fetch_object($res)){
+			$total+=$row->amount;
+     ?>
+    <tr align="center">
+      <td style="font-family:'tahoma';font-size:11px;" class="stitle lines" align="left"><?php echo $row->paymenttermid; ?>&nbsp;<?php if(!empty($row->remarks)){echo"[$row->remarks]";}?></td>
+      <td style="font-family:'tahoma';font-size:11px;" align="right"><?php echo formatNumber($row->amount); ?></td>	  
+      </tr>
+          <?
+           $i++;
+	  $j--;       
+	  
+	}
+	  ?>
+      
+</tbody>
+
+</table>
+</td>
+<td style="margin-left:10px;">
+
+	<p><strong>Payment Mode:</strong> <span style=""><?php echo $tn->paymentmodeid; ?></span><br />
+       <strong>Cheque No:</strong> <span style="">  <?php echo $tn->chequeno; ?></span> <br />
+       <strong>Bank:</strong> <span style=""> <?php echo $tn->bankid; ?></span><br/>
+			<strong>Balance:</strong> <span style=""> <?php echo $balance; ?></span><br/>
+            <strong>Served By: </strong><?php echo $_SESSION['username']; ?> <br/> </p>
+			<p>For: <?php echo $_SESSION['companyname']; ?>. </p>
+<hr>
+</td>
+</tr>
+<tr height="25px">
+<td width="50%"><p> EQUITY BANK &nbsp; KIMATHI  &nbsp;&nbsp; A/c.NO.: 0260201209076<br />
+KENYA COMMERCIAL BANK &nbsp; TOM MBOYA &nbsp;&nbsp; A/c.NO.: 1107979404<br />
+ACCOUNT NAME &nbsp;&nbsp; MASTERWAYS PROPERTIES LIMITED</p></td>
+<td width="50%">
+
+<p style="font-style:italic;"><?php echo $_SESSION['receiptnotes']; ?></p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr ><td colspan="6" style="text-align:center;"><?php echo $_SESSION['receiptfootnote']; ?></td></tr>
+</table>
+  </body>
+</html>

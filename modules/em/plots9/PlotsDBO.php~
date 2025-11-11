@@ -1,0 +1,51 @@
+<?php 
+require_once("../../../DB.php");
+class PlotsDBO extends DB{
+	var $fetchObject;
+	var $sql;
+	var $id;
+	var $result;
+	var $affectedRows;
+ var $table="em_plots";
+
+	function persist($obj){
+		$sql="insert into em_plots(id,code,landlordid,actionid,noofhouses,regionid,managefrom,managefor,indefinite,typeid,commission,target,name,lrno,estate,road,location,letarea,unusedarea,employeeid,deposit,depositmgtfee,depositmgtfeeperc,depositmgtfeevatable,depositmgtfeevatclasseid,mgtfeevatclasseid,vatable,vatclasseid,deductcommission,status,penaltydate,remarks)
+						values('$obj->id','$obj->code','$obj->landlordid','$obj->actionid','$obj->noofhouses','$obj->regionid','$obj->managefrom','$obj->managefor','$obj->indefinite','$obj->typeid','$obj->commission','$obj->target','$obj->name','$obj->lrno','$obj->estate','$obj->road','$obj->location','$obj->letarea','$obj->unusedarea','$obj->employeeid','$obj->deposit','$obj->depositmgtfee','$obj->depositmgtfeeperc','$obj->depositmgtfeevatable','$obj->depositmgtfeevatclasseid','$obj->mgtfeevatclasseid','$obj->vatable','$obj->vatclasseid','$obj->deductcommission','$obj->status','$obj->penaltydate','$obj->remarks')";		
+		$this->sql=$sql;
+		if(mysql_query($sql,$this->connection)){		
+			$this->id=mysql_insert_id();
+			return true;	
+		}		
+	}		
+ 
+	function update($obj,$where=""){			
+		if(empty($where)){
+			$where="id='$obj->id'";
+		}
+		$sql="update em_plots set code='$obj->code',landlordid='$obj->landlordid',actionid='$obj->actionid',noofhouses='$obj->noofhouses',regionid='$obj->regionid',managefrom='$obj->managefrom',managefor='$obj->managefor',indefinite='$obj->indefinite',typeid='$obj->typeid',commission='$obj->commission',target='$obj->target',name='$obj->name',lrno='$obj->lrno',estate='$obj->estate',road='$obj->road',location='$obj->location',letarea='$obj->letarea',unusedarea='$obj->unusedarea',employeeid='$obj->employeeid',deposit='$obj->deposit',depositmgtfee='$obj->depositmgtfee',depositmgtfeeperc='$obj->depositmgtfeeperc',depositmgtfeevatable='$obj->depositmgtfeevatable',depositmgtfeevatclasseid='$obj->depositmgtfeevatclasseid',mgtfeevatclasseid='$obj->mgtfeevatclasseid',vatable='$obj->vatable',vatclasseid='$obj->vatclasseid',deductcommission='$obj->deductcommission',status='$obj->status',penaltydate='$obj->penaltydate',remarks='$obj->remarks' where $where ";
+		$this->sql=$sql;
+		if(mysql_query($sql,$this->connection)){		
+			return true;	
+		}
+	}			
+ 
+	function delete($obj,$where=""){			
+		if(empty($where)){
+			$where=" where id='$obj->id' ";
+		}
+		$sql="delete from em_plots $where ";
+		$this->sql=$sql;
+		if(mysql_query($sql,$this->connection))		
+				return true;	
+	}			
+ 
+	function retrieve($fields,$join,$where,$having,$groupby,$orderby){			
+		$sql="select $fields from em_plots $join $where $groupby $having $orderby"; 
+ 		$this->sql=$sql;
+		$this->result=mysql_query($sql,$this->connection);
+		$this->affectedRows=mysql_affected_rows();
+		$this->fetchObject=mysql_fetch_object(mysql_query($sql,$this->connection));
+	}			
+}			
+?>
+

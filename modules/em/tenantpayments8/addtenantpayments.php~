@@ -1,0 +1,459 @@
+<title>WiseDigits: Tenantpayments </title>
+<?php 
+include "../../../head.php";
+require_once "../../../lib.php";
+?>
+<script type="text/javascript">
+$().ready(function() {
+
+/****** mike additions ******/
+
+ $("#plotname").autocomplete("../../../modules/server/server/search.php?main=em&module=plots&field=name", {
+ 	width: 260,
+ 	selectFirst: false
+ });
+ $("#plotname").result(function(event, data, formatted) {
+   if (data)
+   {
+     document.getElementById("plotname").value=data[0];
+     document.getElementById("plotid").value=data[1];
+     
+     selectHouses();
+   }
+ });
+
+/****** additions End ******/
+ $("#tenantname").autocomplete("../../../modules/server/server/search.php?main=em&module=tenants&field=concat(concat(firstname,' ',middlename),' ',lastname)", {
+ 	width: 260,
+ 	selectFirst: false
+ });
+ $("#tenantname").result(function(event, data, formatted) {
+   if (data)
+   {
+     document.getElementById("tenantname").value=data[0];
+     document.getElementById("tenantid").value=data[1];
+     document.getElementById("registeredon").value=data[8];
+     //document.getElementById("postaladdress").value=data[6];
+     document.getElementById("idno").value=data[13];
+     //document.getElementById("passportno").value=data[14];
+    // document.getElementById("address").value=data[7];
+
+     selectTenantHouses();
+     
+     getBalances();
+   }
+ });
+ $("#paymenttermname").autocomplete("../../../modules/server/server/search.php?main=em&module=paymentterms&field=name", {
+ 	width: 260,
+ 	selectFirst: false
+ });
+ $("#paymenttermname").result(function(event, data, formatted) {
+   if (data)
+   {
+     document.getElementById("paymenttermname").value=data[0];
+     document.getElementById("paymenttermid").value=data[1];
+   }
+ });
+});
+/*** changed ***/
+function selectHouses()
+{
+	
+	var id=document.getElementById("plotid").value;
+	var houseid=document.getElementById("houseid").value;
+	var xmlhttp;
+	var url="../houses/populate.php?id="+id+"&houseid="+houseid;
+	xmlhttp=GetXmlHttpObject();
+	
+if (xmlhttp==null)
+  {
+  alert ("Browser does not support HTTP Request");
+  return;
+  }  
+/*** changed ***/
+xmlhttp.onreadystatechange=function() {
+	if (xmlhttp.readyState==4)
+	{
+		document.getElementById("houseid").innerHTML=xmlhttp.responseText;
+	}
+	};
+	
+xmlhttp.open("GET",url,true);
+xmlhttp.send(null);
+}
+
+function selectTenantHouses()
+{
+	
+	var id=document.getElementById("tenantid").value;
+	var xmlhttp;
+	var url="../houses/populate.php?tenantid="+id;
+	xmlhttp=GetXmlHttpObject();
+	
+if (xmlhttp==null)
+  {
+  alert ("Browser does not support HTTP Request");
+  return;
+  }
+/*** changed ***/
+xmlhttp.onreadystatechange=function() {
+	if (xmlhttp.readyState==4)
+	{
+		document.getElementById("houseid").innerHTML=xmlhttp.responseText;
+	}
+	};
+	
+xmlhttp.open("GET",url,true);
+xmlhttp.send(null);
+}
+	
+function getTenant(houseid)
+{
+	var xmlhttp;
+	var url="../tenants/populate.php?id="+houseid;
+	xmlhttp=GetXmlHttpObject();
+	
+if (xmlhttp==null)
+  {
+  alert ("Browser does not support HTTP Request");
+  return;
+  }  
+xmlhttp.onreadystatechange=function() {
+	if (xmlhttp.readyState==4)
+	{
+		var data = xmlhttp.responseText;
+		var dt = data.split("|");
+		document.getElementById("tenantid").value=dt[0];
+		document.getElementById("tenantname").value=dt[1];
+		document.getElementById("registeredon").value=dt[2];
+		document.getElementById("idno").value=dt[3];
+		getBalances();
+	}
+	};
+	
+xmlhttp.open("GET",url,true);
+xmlhttp.send(null);
+}
+
+function getBalances()
+{
+	var tenantid=document.getElementById("tenantid").value;
+	var houseid=document.getElementById("houseid").value;
+	if(!tenantid)
+		tenantid=0;
+	if(!houseid)
+		houseid=0;
+	
+	var xmlhttp;
+	var url="populatebalances.php?houseid="+houseid+"&tenantid="+tenantid;alert(url);
+	xmlhttp=GetXmlHttpObject();
+	
+if (xmlhttp==null)
+  {
+  alert ("Browser does not support HTTP Request");
+  return;
+  }  
+xmlhttp.onreadystatechange=function() {
+	if (xmlhttp.readyState==4)
+	{
+		document.getElementById("balances").innerHTML=xmlhttp.responseText;
+	}
+	};
+	
+xmlhttp.open("GET",url,true);
+xmlhttp.send(null);
+}
+
+function GetXmlHttpObject()
+{
+if (window.XMLHttpRequest)
+  {
+  // code for IE7+, Firefox, Chrome, Opera, Safari
+  return new XMLHttpRequest();
+  }
+if (window.ActiveXObject)
+  {
+  // code for IE6, IE5
+  return new ActiveXObject("Microsoft.XMLHTTP");
+  }
+return null;
+}
+
+function Clickheretoprint()
+{ 
+	var msg;
+	msg="Do you want to print Voucher?";
+	var ans=confirm(msg);
+	if(ans)
+	{
+		poptastic("printpayment.php?doc=<?php echo $obj->documentno; ?>&tenant=<?php echo $obj->tenantid; ?>&paidon=<?php echo $obj->paidon; ?>&copy=<?php echo $obj->retrieve; ?>",450,940);
+	}
+}
+
+womAdd('selectHouses()');
+womOn();
+</script>
+ <script type="text/javascript" charset="utf-8">
+ $(document).ready(function() {
+ 	$('#tbl').dataTable( {
+ 		"sScrollY": 180,
+ 		"bJQueryUI": true,
+ 		"bSort":false,
+ 		"sPaginationType": "full_numbers"
+ 	} );
+ } );
+ </script>
+
+<form class="forms" action="addtenantpayments_proc.php" name="tenantpayments" method="POST" enctype="multipart/form-data">
+	<table width="100%" class="titems gridd" border="0" align="center" cellpadding="2" cellspacing="0" id="tblSample">
+	<?php if(!empty($obj->retrieve)){?>
+		<tr>
+			<td colspan="4" align="center"><input type="hidden" name="retrieve" value="<?php echo $obj->retrieve; ?>"/>Receipt No:<input type="text" size="4" name="receiptno"/>&nbsp;<input type="submit" name="action" value="Filter"/></td>
+		</tr>
+		<?php }?>
+<td style="background:#fff;">
+<table>
+<tr>
+<td>Plot:</td><td><input type="text" name="plotname" id="plotname" <?php if(!empty($obj->retrieve)){?>readonly="readonly"<?php }?> value='<?php echo $obj->plotname; ?>' size="30"/>
+<input type="hidden" name='plotid' id='plotid' value='<?php echo $obj->plotid; ?>'>
+</td>
+<td>House No:</td><td><?php if(empty($obj->retrieve) ){?><select name="houseid" class="selectbox"  id="houseid" onclick="getTenant(this.value);">
+<option value="">Select...</option>
+<?php if(!empty($obj->plotid) or !empty($obj->tenantid)){
+$houses=new Houses();
+if(!empty($obj->plotid) and empty($obj->tenantid))
+	$where=" where em_houses.plotid='$obj->plotid'  ";
+if(empty($obj->plotid) and !empty($obj->tenantid))
+	$where=" where em_housetenants.tenantid='$obj->tenantid'";
+else
+	$where=" where em_houses.plotid='$obj->plotid'  ";
+
+$fields="em_houses.id, em_houses.hseno, em_houses.hsecode, em_plots.name plotid, em_houses.amount, em_houses.size, em_houses.bedrms, em_houses.floor, em_houses.elecaccno, em_houses.wateraccno, em_houses.hsedescriptionid, em_houses.deposit, em_houses.vatable, em_houses.housestatusid, em_houses.rentalstatusid, em_houses.remarks";
+if(!empty($obj->plotid) and empty($obj->tenantid))
+	$join=" left join em_plots on em_houses.plotid=em_plots.id  ";
+if(empty($obj->plotid) and !empty($obj->tenantid))
+	$join=" left join em_plots on em_houses.plotid=em_plots.id left join em_housetenants on em_housetenants.houseid=em_houses.id ";
+else
+	$join=" left join em_plots on em_houses.plotid=em_plots.id  ";
+
+$having=" ";
+$groupby="";
+$orderby="";
+$houses->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+	while($rw=mysql_fetch_object($houses->result)){
+	?>
+		<option value="<?php echo $rw->id; ?>" <?php if($obj->houseid==$rw->id){echo "selected";}?>><?php echo initialCap($rw->plotid);?>=><?php echo initialCap($rw->hseno); ?></option>
+	<?php
+	}
+ }?>
+</select>
+<?php }else{?>
+<input type="hidden" name="houseid" value="<?php echo $obj->houseid; ?>"/>
+<input type="text" readonly="readonly" name="hseno" value="<?php echo $obj->hseno; ?>"/>
+<?php }?>
+</tr>
+<tr><td>Tenant:</td><td><input type="text" name="tenantname" id="tenantname" <?php if(!empty($obj->retrieve)){?>readonly="readonly"<?php }?> size="30" value="<?php echo $obj->tenantname;?>"/>
+													<input type="hidden" name="tenantid" id="tenantid" value="<?php echo trim($obj->tenantid); ?>"></td></tr>
+<tr><td>Date Reg:</td><td><input type="text" name="registeredon" id="registeredon" value="<?php echo$obj->registeredon;?>" /></td></tr>
+<tr><td>ID No:</td><td><input type="text" name="idno" id="idno" value="<?php echo $obj->idno;?>" /></td></tr>
+<!--tr><td colspan="2"><input type="submit" class="btn" value="retrieve"></td></tr-->
+</table>
+
+</td>
+<td style="background:#fff;">
+
+<table  id="balances"></table>
+
+</td>
+		</table>
+		<?php if(empty($obj->retrieve)){?>
+	<table width="100%" class="titems gridd" border="0" align="center" cellpadding="2" cellspacing="0" id="tblSample">
+	<tr>
+		<th>Payment Term  </th>
+		<th align="right">Amount  </th>
+		<th align="right">Month  </th>
+		<th align="right">Year  </th>
+		<th align="right">Remarks  </th>
+		<th>&nbsp;</th>
+	</tr>
+	<tr>
+		<td><select name="paymenttermid"  class="selectbox" id="paymenttermid" >
+<option value="">Select...</option>
+<?php
+	$paymentterms=new Paymentterms();
+	$where="  ";
+	$fields="em_paymentterms.id, em_paymentterms.name, em_paymentterms.type, em_paymentterms.payabletolandlord, em_paymentterms.remarks";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$paymentterms->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+	while($rw=mysql_fetch_object($paymentterms->result)){
+	?>
+		<option value="<?php echo $rw->id; ?>" <?php if($obj->paymenttermid==$rw->id){echo "selected";}?>><?php echo initialCap($rw->name);?></option>
+	<?php
+	}
+	?>
+</select>
+		</td>
+		<td><input type="text" name="amount" id="amount" size="18" value="<?php echo $obj->amount; ?>"></td>
+		
+		<td><select name="month" id="month" class="selectbox">
+        <option value="">Select...</option>
+        <option value="1" <?php if($obj->month==1){echo"selected";}?>>January</option>
+        <option value="2" <?php if($obj->month==2){echo"selected";}?>>February</option>
+        <option value="3" <?php if($obj->month==3){echo"selected";}?>>March</option>
+        <option value="4" <?php if($obj->month==4){echo"selected";}?>>April</option>
+        <option value="5" <?php if($obj->month==5){echo"selected";}?>>May</option>
+        <option value="6" <?php if($obj->month==6){echo"selected";}?>>June</option>
+        <option value="7" <?php if($obj->month==7){echo"selected";}?>>July</option>
+        <option value="8" <?php if($obj->month==8){echo"selected";}?>>August</option>
+        <option value="9" <?php if($obj->month==9){echo"selected";}?>>September</option>
+        <option value="10" <?php if($obj->month==10){echo"selected";}?>>October</option>
+        <option value="11" <?php if($obj->month==11){echo"selected";}?>>November</option>
+        <option value="12" <?php if($obj->month==12){echo"selected";}?>>December</option>
+      </select></td>
+		<td><select name="year" id="year" class="selectbox">
+          <option value="">Select...</option>
+          <?php
+  $i=date("Y")-10;
+  while($i<date("Y")+10)
+  {
+  	?>
+          <option value="<?php echo $i; ?>" <?php if($obj->year==$i){echo"selected";}?>><?php echo $i; ?></option>
+          <?
+    $i++;
+  }
+  ?>
+        </select></td>
+		<td><textarea name="remarks"><?php echo $obj->remarks; ?></textarea></td>
+	<td><input type="submit" class="btn" name="action2" value="Add"/></td>
+	</tr>
+	</table>
+	<?php }?>
+		<table align='center'>
+			<tr>
+			<td>
+		Receipt No:<input type="text" name="documentno" id="documentno" readonly size="4"  value="<?php echo $obj->documentno; ?>">
+		Paid On:<input name="paidon" id="paidon" readonly class="date_input" size="18" readonly  value="<?php echo $obj->paidon; ?>">
+		Payment Mode:				<select class="selectbox" name='paymentmodeid'>
+				<option value="">Select...</option>
+				<?php
+				$paymentmodes=new Paymentmodes();
+				$fields="sys_paymentmodes.id, sys_paymentmodes.name";
+				$join="";
+				$having="";
+				$groupby="";
+				$orderby="";
+				$where="";
+				$paymentmodes->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+				while($rw=mysql_fetch_object($paymentmodes->result)){
+				?>
+					<option value="<?php echo $rw->id; ?>" <?php if($obj->paymentmodeid==$rw->id){echo "selected";}?>><?php echo initialCap($rw->name);?></option>
+				<?php
+				}
+				?>
+				</select>
+		Bank:				<select class="selectbox" name='bankid'>
+				<option value="">Select...</option>
+				<?php
+				$banks=new Banks();
+				$fields="fn_banks.id, fn_banks.name, fn_banks.bankacc, fn_banks.bankbranch, fn_banks.remarks, fn_banks.createdby, fn_banks.createdon, fn_banks.lasteditedby, fn_banks.lasteditedon";
+				$join="";
+				$having="";
+				$groupby="";
+				$orderby="";
+				$where="";
+				$banks->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+				while($rw=mysql_fetch_object($banks->result)){
+				?>
+					<option value="<?php echo $rw->id; ?>" <?php if($obj->bankid==$rw->id){echo "selected";}?>><?php echo initialCap($rw->name);?></option>
+				<?php
+				}
+				?>
+				</select>
+		Cheque No:<input type="text" name="chequeno" id="chequeno" value="<?php echo $obj->chequeno; ?>">
+		Paid By:<input type="text" name="paidby" id="paidby"  size="12"  value="<?php echo $obj->paidby; ?>">
+			</td>
+			</tr>
+		</table>
+<table style="clear:both" class="tgrid display" id="tbl" cellpadding="0" align="center" width="98%" cellspacing="0">
+	<thead>
+	<tr style="font-size:18px; vertical-align:text-top; ">
+		<th align="left" >#</th>
+		<th align="left">Payment Term  </th>
+		<th align="left">Amount  </th>
+		<th align="left">Month  </th>
+		<th align="left">Year  </th>
+		<th align="left">Remarks  </th>
+		<th><input type="hidden" name="iterator" value="<?php echo $obj->iterator; ?>"/></th>
+		<th>&nbsp;</th>
+		</tr>
+	</thead>
+	<tbody>
+	<?php
+	if($_SESSION['shptenantpayments']){
+		$shptenantpayments=$_SESSION['shptenantpayments'];
+		$i=0;
+		$j=$obj->iterator;
+		$total=0;
+		while($j>0){
+
+		$total+=$shptenantpayments[$i]['amount'];
+		?>
+		<tr style="font-size:12px; vertical-align:text-top; ">
+			<td><?php echo ($i+1); ?></td>
+			<td><?php echo $shptenantpayments[$i]['paymenttermname']; ?> </td>
+			<td align="right"><?php echo formatNumber($shptenantpayments[$i]['amount']); ?> </td>
+			<td><?php echo getMonth($shptenantpayments[$i]['month']); ?> </td>
+			<td><?php echo $shptenantpayments[$i]['year']; ?> </td>
+			<td><?php echo $shptenantpayments[$i]['remarks']; ?> </td>
+			<td><a href="edit.php?i=<?php echo $i; ?>&action=edit&edit=<?php echo $obj->edit; ?>"><img src="../edit.png" alt="edit" title="edit" /></a></td>
+			<td><a href="edit.php?i=<?php echo $i; ?>&action=del&edit=<?php echo $obj->edit; ?>">Del</a></td>
+		</tr>
+		<?php
+		$i++;
+		$j--;
+		}
+	}
+	?>
+	</tbody>
+</table>
+<table align="center" style="margin-left:500px;">
+	<tr>
+		<td align="center">Total:</td><td><input type="text" size='18' readonly value="<?php echo formatNumber($total); ?>"/></td>	</tr>
+		<?php if(empty($obj->retrieve)){?>
+	<tr>
+		<td colspan="2" align="center"><input type="submit" class="btn" name="action" id="action" value="<?php echo $obj->action; ?>">&nbsp;<input type="submit" class="btn" name="action" id="action" value="Cancel" onclick="window.top.hidePopWin(true);"/></td>
+	</tr>
+	<?php }else{?>
+	<tr>
+		<td colspan="2" align="center"><input type="button" class="btn" name="action" id="action" value="Print" onclick="Clickheretoprint();"></td>
+        </tr>
+	<?php }?>
+<?php if(!empty($obj->id)){?>
+<?php }?>
+	<?php if(!empty($obj->id)){?> 
+<?php }?>
+</table>
+</form>
+<?php 
+
+if($saved=="Yes")
+{
+	?>
+    <script language="javascript1.1" type="text/javascript">Clickheretoprint();</script>
+    <?
+    //$obj="";
+	//$_SESSION['crshop']="";
+    redirect("addtenantpayments_proc.php");
+  }
+  
+if(!empty($error)){
+	showError($error);
+}
+?>

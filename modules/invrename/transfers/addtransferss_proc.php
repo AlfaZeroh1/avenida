@@ -1,0 +1,429 @@
+<?php 
+session_start();
+require_once("../../../DB.php");
+require_once("../../../lib.php");
+require_once("Transfers_class.php");
+require_once("../../auth/rules/Rules_class.php");
+
+
+if(empty($_SESSION['userid'])){;
+	redirect("../../auth/users/login.php");
+}
+
+require_once("../../sys/branches/Branches_class.php");
+require_once("../../sys/branches/Branches_class.php");
+require_once("../transferdetails/Transferdetails_class.php");
+require_once("../../inv/transfers/Transfers_class.php");
+require_once("../../inv/items/Items_class.php");
+require_once("../../inv/itemdetails/Itemdetails_class.php");
+require_once("../../sys/transactions/Transactions_class.php");
+require_once("../../inv/branchstocks/Branchstocks_class.php");
+require_once("../../inv/requisitions/Requisitions_class.php");
+require_once("../../fn/generaljournalaccounts/Generaljournalaccounts_class.php");
+require_once("../../fn/generaljournals/Generaljournals_class.php");
+
+//Authorization.
+if(!empty($_GET['id'])){
+	$auth->roleid="7496";//Edit
+}
+else{
+	$auth->roleid="7494";//Add
+}
+$auth->levelid=$_SESSION['level'];
+auth($auth);
+
+//connect to db
+$db=new DB();
+$obj=(object)$_POST;
+$ob=(object)$_GET;
+
+$mode=$_GET['mode'];
+if(!empty($mode)){
+	$obj->mode=$mode;
+}
+$id=$_GET['id'];
+$error=$_GET['error'];
+if(!empty($_GET['retrieve'])){
+	$obj->retrieve=$_GET['retrieve'];
+}
+	
+if(empty($obj->action)){
+	$obj->transferedon=date('Y-m-d');
+
+}
+
+if($ob->receive==1){
+  $obj->receive=1;
+  $obj->invoiceno=$ob->documentno;
+  $obj->action="Filter";
+}
+	
+if($obj->action=="Save"){
+	$transfers=new Transfers();
+	$obj->createdby=$_SESSION['userid'];
+	$obj->createdon=date("Y-m-d H:i:s");
+	$obj->lasteditedby=$_SESSION['userid'];
+	$obj->lasteditedon=date("Y-m-d H:i:s");
+	$obj->ipaddress=$_SERVER['REMOTE_ADDR'];
+	$shptransfers=$_SESSION['shptransfers'];
+	$error=$transfers->validates($obj);
+	if(!empty($error)){
+		$error=$error;
+	}
+	elseif(empty($shptransfers)){
+		$error="No items in the sale list!";
+	}
+	else{
+		$transfers=$transfers->setObject($obj);
+		if($transfers->add($transfers,$shptransfers,$bool=true)){
+			$error=SUCCESS;
+			$saved="Yes";
+		}
+		else{
+			$error=FAILURE;
+		}
+	}
+}
+	
+if($obj->action=="Update"){
+	$transfers=new Transfers();
+	$obj->lasteditedby=$_SESSION['userid'];
+	$obj->lasteditedon=date("Y-m-d H:i:s");
+
+	$error=$transfers->validate($obj);
+	if(!empty($error)){
+		$error=$error;
+	}
+	else{
+		$transfers=$transfers->setObject($obj);
+		$shptransfers=$_SESSION['shptransfers'];
+		$transfers->action=$obj->action;
+		if($transfers->edit($transfers,"",$shptransfers)){
+			$error=UPDATESUCCESS;
+			//redirect("addtransfers_proc.php?id=".$transfers->id."&error=".$error);
+		}
+		else{
+			$error=UPDATEFAILURE;
+		}
+	}
+}
+if($obj->action=="Receive"){
+	$transfers=new Transfers();
+	$obj->lasteditedby=$_SESSION['userid'];
+	$obj->lasteditedon=date("Y-m-d H:i:s");
+
+	$error=$transfers->validate($obj);
+	if(!empty($error)){
+		$error=$error;
+	}
+	else{
+		$transfers=$transfers->setObject($obj);
+		$shptransfers=$_SESSION['shptransfers'];
+		$transfers->action=$obj->action;
+		
+		$transferdetailsDBO = new TransferdetailsDBO();
+		$num=count($shop);
+		$i=0;
+		$total=0;
+		//print_r($shop);
+		$transaction = new Transactions();
+		$fields="*";
+		$where=" where lower(replace(name,' ',''))='Transfers' ";
+		$join="";
+		$having="";
+		$groupby="";
+		$orderby="";
+		$transaction->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+		$transaction=$transaction->fetchObject;
+		
+		while($i<$num){
+		         //  print_r($shop);
+			if(!empty($shop[$i]['id'])){
+			  $obj->code=$shop[$i]['code'];
+			  $obj->costprice=$shop[$i]['costprice'];
+			  $obj->total=$shop[$i]['total'];
+			  $obj->itemid=$shop[$i]['itemid'];
+			  $obj->itemdetailid=$shop[$i]['itemdetailid'];
+			  $obj->itemname=$shop[$i]['itemname'];
+			  $obj->quantity=$shop[$i]['quantity'];
+			  $obj->memo=$shop[$i]['memo'];
+			  $obj->instalcode=$shop[$i]['instalcode'];
+			  $obj->crdcode=$shop[$i]['crdcode'];
+			  $obj->status=1;
+			  
+			  $total+=$obj->quantity*$obj->costprice;
+			  
+			  //$ob = $this->setObject($obj);
+				  $query="update inv_branchstocks set status='Transferred',brancheid='$obj->tobrancheid' where itemdetailid='$obj->itemdetailid' ";
+				  mysql_query($query);
+				  
+				  $query2="update inv_itemdetails set brancheid='$obj->tobrancheid' where id='$obj->itemdetailid' ";
+				  mysql_query($query2);
+				  
+				  $this->id=$transferdetailsDBO->id;
+				  $this->sql=$transferdetailsDBO->sql;
+			}
+			$i++;
+		}
+		
+		$it=0;
+		$shpgeneraljournals = array();
+		
+			//retrieve account to credit
+		$generaljournalaccounts2 = new Generaljournalaccounts();
+		$fields="*";
+		$where=" where refid='$obj->tobrancheid' and acctypeid='34'";
+		$join="";
+		$having="";
+		$groupby="";
+		$orderby="";
+		$generaljournalaccounts2->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+		$generaljournalaccounts2=$generaljournalaccounts2->fetchObject;		
+
+				//make debit entry
+		$generaljournal = new Generaljournals();
+		$ob->tid=$purchasedetails->id;
+		$ob->documentno="$obj->documentno";
+		$ob->remarks="Transfer # $obj->documentno";
+		$ob->memo=$purchasedetails->remarks;
+		$ob->accountid=$generaljournalaccounts2->id;
+		$ob->daccountid=$generaljournalaccounts->id;
+		$ob->transactionid=$transaction->id;
+		$ob->mode="credit";
+		$ob->debit=$total;
+		$ob->credit=0;
+
+		$ob->transactdate=$obj->transferedon;
+		$generaljournal->setObject($ob);
+
+		$shpgeneraljournals[$it]=array('tid'=>"$generaljournal->tid",'documentno'=>"$generaljournal->documentno",'remarks'=>"$generaljournal->remarks",'memo'=>"$generaljournal->memo",'accountid'=>"$generaljournal->accountid",'transactionid'=>"$generaljournal->transactionid",'mode'=>"$generaljournal->mode",'debit'=>"$generaljournal->debit",'credit'=>"$generaljournal->credit",'transactdate'=>"$generaljournal->transactdate",'class'=>"$generaljournal->class");
+		$it++;
+		
+			//retrieve account to credit
+		$generaljournalaccounts2 = new Generaljournalaccounts();
+		$fields="*";
+		$where=" where refid='$obj->brancheid' and acctypeid='34'";
+		$join="";
+		$having="";
+		$groupby="";
+		$orderby="";
+		$generaljournalaccounts2->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+		$generaljournalaccounts2=$generaljournalaccounts2->fetchObject;		
+
+				//make debit entry
+		$generaljournal = new Generaljournals();
+		$ob->tid=$purchasedetails->id;
+		$ob->documentno="$obj->documentno";
+		$ob->remarks="Transfer # $obj->documentno";
+		$ob->memo=$purchasedetails->remarks;
+		$ob->accountid=$generaljournalaccounts2->id;
+		$ob->daccountid=$generaljournalaccounts->id;
+		$ob->transactionid=$transaction->id;
+		$ob->mode="credit";
+		$ob->debit=0;
+		$ob->credit=$total;
+
+		$ob->transactdate=$obj->transferedon;
+		$generaljournal->setObject($ob);
+
+		$shpgeneraljournals[$it]=array('tid'=>"$generaljournal->tid",'documentno'=>"$generaljournal->documentno",'remarks'=>"$generaljournal->remarks",'memo'=>"$generaljournal->memo",'accountid'=>"$generaljournal->accountid",'transactionid'=>"$generaljournal->transactionid",'mode'=>"$generaljournal->mode",'debit'=>"$generaljournal->debit",'credit'=>"$generaljournal->credit",'transactdate'=>"$generaljournal->transactdate",'class'=>"$generaljournal->class");
+		$it++;
+		
+		$gn= new Generaljournals();
+		$gn->add($obj,$shpgeneraljournals);
+	}
+}
+if($obj->action2=="Add"){
+
+	if(empty($obj->itemid)){
+		$error=" Product must be provided";
+	}
+	elseif(empty($obj->quantity)){
+		$error=" Quantity must be provided";
+	}
+	else{
+	$_SESSION['obj']=$obj;
+	if(empty($obj->iterator))
+		$it=0;
+	else
+		$it=$obj->iterator;
+	$shptransfers=$_SESSION['shptransfers'];
+
+	$items = new Items();
+	$fields=" * ";
+	$join="";
+	$groupby="";
+	$having="";
+	$where=" where id='$obj->itemid'";
+	$items->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+	$items=$items->fetchObject;
+
+	$x=0;
+	
+	$itemdetails = new Itemdetails();
+	$fields="*";
+	$where=" where itemid='$obj->itemid' and status=1 ";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby=" order by id asc limit $obj->quantity ";
+	$itemdetails->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+	while($rw=mysql_fetch_object($itemdetails->result)){
+	  $shptransfers[$it]=array('itemid'=>"$obj->itemid",'itemdetailid'=>"$rw->id", 'serialno'=>"$rw->serialno", 'itemname'=>"$items->name", 'quantity'=>"1", 'code'=>"$obj->code", 'costprice'=>"$obj->costprice", 'memo'=>"$obj->memo", 'costprice'=>"$obj->costprice");
+	  $it++;
+	}
+		$obj->iterator=$it;
+ 	$_SESSION['shptransfers']=$shptransfers;
+
+	$obj->itemid="";
+ 	$obj->quantity="";
+ 	$obj->code="";
+ 	$obj->costprice="";
+ 	$obj->total="";
+ }
+}
+
+if(empty($obj->action)){
+
+	$branches= new Branches();
+	$fields="sys_branches.id, sys_branches.name, sys_branches.remarks, sys_branches.ipaddress, sys_branches.createdby, sys_branches.createdon, sys_branches.lasteditedby, sys_branches.lasteditedon";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$branches->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+
+	$branches2= new Branches();
+	$fields="";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$branches2->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+
+}
+
+if($obj->action=="Filter"){
+        echo $obj->invoiceno;
+	if(!empty($obj->invoiceno)){
+	//echo "miketheshit";
+		$transfers = new Transfers();
+		$fields="inv_transfers.id, inv_transfers.documentno, inv_items.id,inv_items.name itemname,  inv_transferdetails.quantity,inv_transferdetails.itemid , inv_transferdetails.costprice, inv_transferdetails.total,inv_transferdetails.status, inv_transferdetails.memo,inv_transferdetails.itemdetailid, inv_transfers.documentno, inv_transfers.remarks, inv_transfers.createdby, inv_transfers.createdon, inv_transfers.lasteditedby, inv_transfers.lasteditedon, inv_transfers.ipaddress";
+		$join=" left join inv_transferdetails on inv_transferdetails.transferid=inv_transfers.id left join inv_items on inv_items.id=inv_transferdetails.itemid ";
+		$having="";
+		$groupby="";
+		$orderby="";
+		$where=" where inv_transfers.documentno='$obj->invoiceno' ";
+		$transfers->retrieve($fields,$join,$where,$having,$groupby,$orderby);echo $transfers->sql;
+		$res=$transfers->result;
+		$it=0;
+		while($row=mysql_fetch_object($res)){
+				
+			$items = new Items();
+			$fields=" * ";
+			$join="";
+			$groupby="";
+			$having="";
+			$where=" where id='$row->itemid'";
+			$items->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+			$items=$items->fetchObject;
+	  
+			$ob=$row;
+			$row->total=$row->quantity*$row->costprice;
+			
+			$shptransfers[$it]=array('itemid'=>"$row->itemid",'itemdetailid'=>"$row->itemdetailid",'status'=>"$row->status", 'itemname'=>"$items->name", 'quantity'=>"$row->quantity", 'code'=>"$row->code", 'costprice'=>"$row->costprice", 'memo'=>"$row->memo", 'total'=>"$row->total");
+			
+			
+			$it++;
+		}
+		
+
+		$obj = (object) array_merge((array) $obj, (array) $ob);
+		$obj = (object) array_merge((array) $obj, (array) $auto);	
+		$obj = (object) array_merge((array) $obj, (array) $auto2);
+
+		$obj->iterator=$it;
+			$obj->quantity="";
+			$obj->costprice="";
+			$obj->tradeprice="";
+			$obj->total="";
+			$obj->itemname="";
+			$obj->code="";
+			$obj->itemid="";
+			$obj->remarks="";
+			
+		if($obj->receive==1){
+		  $obj->action="Receive";
+		}else{
+		  $obj->action="Update";
+		}
+			
+// 		$_SESSION['shpdeliverynotes']="";
+		$_SESSION['shptransfers']=$shptransfers;
+	
+	}
+}
+
+if(!empty($id)){
+	$transfers=new Transfers();
+	$where=" where id=$id ";
+	$fields="inv_transfers.id, inv_transfers.documentno, inv_transfers.brancheid, inv_transfers.tobrancheid, inv_transfers.remarks, inv_transfers.transferedon, inv_transfers.status, inv_transfers.ipaddress, inv_transfers.createdby, inv_transfers.createdon, inv_transfers.lasteditedby, inv_transfers.lasteditedon";
+	$join="";
+	$having="";
+	$groupby="";
+	$orderby="";
+	$transfers->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+	$obj=$transfers->fetchObject;
+
+	//for autocompletes
+}
+if(empty($id) and empty($obj->action) and empty($obj->receive)){
+	if(empty($_GET['edit']) or $ob->dispatch==1){
+		$obj->action="Save";
+		
+		$defs=mysql_fetch_object(mysql_query("select max(documentno)+1 documentno from inv_transfers"));
+		if($defs->documentno == null){
+			$defs->documentno=1;
+		}
+		$obj->documentno=$defs->documentno;
+
+		$obj->transferedon=date('Y-m-d');
+		
+		if($ob->dispatch==1){
+		 $obj->retrieve="";
+		 $requisitions=new Requisitions();
+		  $where=" where id=$ob->requisitionno ";
+		  $fields="*";
+		  $join="";
+		  $having="";
+		  $groupby="";
+		  $orderby="";
+		  $requisitions->retrieve($fields,$join,$where,$having,$groupby,$orderby);
+		  $requisitions=$requisitions->fetchObject;
+		  $obj->requisitionno=$ob->requisitionno;
+		  $obj->tobrancheid=$requisitions->brancheid;
+		  $obj->iterator=count($_SESSION['shptransfers']);
+		 // print_r($_SESSION['shptransfers']);
+		}
+	}
+	else{
+		$obj=$_SESSION['obj'];
+	}
+}	
+elseif(!empty($id) and empty($obj->action) and empty($obj->receive)){
+	$obj->action="Update";
+}
+
+if($obj->receive==1){
+  $obj->action="Receive";
+}
+
+if($obj->receive==1){
+  $obj->action="Receive";
+}
+	
+	
+$page_title="Transfers ";
+include "addtransfers.php";
+?>

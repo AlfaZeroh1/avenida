@@ -1,0 +1,469 @@
+<?php 
+require_once("AssetsDBO.php");
+class Assets
+{				
+	var $id;			
+	var $name;			
+	var $photo;			
+	var $documentno;			
+	var $categoryid;			
+	var $value;			
+	var $salvagevalue;			
+	var $purchasedon;			
+	var $supplierid;			
+	var $lpono;			
+	var $deliveryno;			
+	var $remarks;			
+	var $memo;			
+	var $ipaddress;			
+	var $createdby;			
+	var $createdon;			
+	var $lasteditedby;			
+	var $lasteditedon;			
+	var $assetsDBO;
+	var $fetchObject;
+	var $sql;
+	var $result;
+	var $table;
+	var $affectedRows;
+
+	function setObject($obj){
+		$this->id=str_replace("'","\'",$obj->id);
+		$this->name=str_replace("'","\'",$obj->name);
+		$this->photo=str_replace("'","\'",$obj->photo);
+		$this->documentno=str_replace("'","\'",$obj->documentno);
+		if(empty($obj->categoryid))
+			$obj->categoryid='NULL';
+		$this->categoryid=$obj->categoryid;
+		$this->value=str_replace("'","\'",$obj->value);
+		$this->salvagevalue=str_replace("'","\'",$obj->salvagevalue);
+		$this->purchasedon=str_replace("'","\'",$obj->purchasedon);
+		if(empty($obj->supplierid))
+			$obj->supplierid='NULL';
+		$this->supplierid=$obj->supplierid;
+		$this->lpono=str_replace("'","\'",$obj->lpono);
+		$this->deliveryno=str_replace("'","\'",$obj->deliveryno);
+		$this->remarks=str_replace("'","\'",$obj->remarks);
+		$this->memo=str_replace("'","\'",$obj->memo);
+		$this->ipaddress=str_replace("'","\'",$obj->ipaddress);
+		$this->createdby=str_replace("'","\'",$obj->createdby);
+		$this->createdon=str_replace("'","\'",$obj->createdon);
+		$this->lasteditedby=str_replace("'","\'",$obj->lasteditedby);
+		$this->lasteditedon=str_replace("'","\'",$obj->lasteditedon);
+		return $this;
+	
+	}
+	//get id
+	function getId(){
+		return $this->id;
+	}
+	//set id
+	function setId($id){
+		$this->id=$id;
+	}
+
+	//get name
+	function getName(){
+		return $this->name;
+	}
+	//set name
+	function setName($name){
+		$this->name=$name;
+	}
+
+	//get photo
+	function getPhoto(){
+		return $this->photo;
+	}
+	//set photo
+	function setPhoto($photo){
+		$this->photo=$photo;
+	}
+
+	//get documentno
+	function getDocumentno(){
+		return $this->documentno;
+	}
+	//set documentno
+	function setDocumentno($documentno){
+		$this->documentno=$documentno;
+	}
+
+	//get categoryid
+	function getCategoryid(){
+		return $this->categoryid;
+	}
+	//set categoryid
+	function setCategoryid($categoryid){
+		$this->categoryid=$categoryid;
+	}
+
+	//get value
+	function getValue(){
+		return $this->value;
+	}
+	//set value
+	function setValue($value){
+		$this->value=$value;
+	}
+
+	//get salvagevalue
+	function getSalvagevalue(){
+		return $this->salvagevalue;
+	}
+	//set salvagevalue
+	function setSalvagevalue($salvagevalue){
+		$this->salvagevalue=$salvagevalue;
+	}
+
+	//get purchasedon
+	function getPurchasedon(){
+		return $this->purchasedon;
+	}
+	//set purchasedon
+	function setPurchasedon($purchasedon){
+		$this->purchasedon=$purchasedon;
+	}
+
+	//get supplierid
+	function getSupplierid(){
+		return $this->supplierid;
+	}
+	//set supplierid
+	function setSupplierid($supplierid){
+		$this->supplierid=$supplierid;
+	}
+
+	//get lpono
+	function getLpono(){
+		return $this->lpono;
+	}
+	//set lpono
+	function setLpono($lpono){
+		$this->lpono=$lpono;
+	}
+
+	//get deliveryno
+	function getDeliveryno(){
+		return $this->deliveryno;
+	}
+	//set deliveryno
+	function setDeliveryno($deliveryno){
+		$this->deliveryno=$deliveryno;
+	}
+
+	//get remarks
+	function getRemarks(){
+		return $this->remarks;
+	}
+	//set remarks
+	function setRemarks($remarks){
+		$this->remarks=$remarks;
+	}
+
+	//get memo
+	function getMemo(){
+		return $this->memo;
+	}
+	//set memo
+	function setMemo($memo){
+		$this->memo=$memo;
+	}
+
+	//get ipaddress
+	function getIpaddress(){
+		return $this->ipaddress;
+	}
+	//set ipaddress
+	function setIpaddress($ipaddress){
+		$this->ipaddress=$ipaddress;
+	}
+
+	//get createdby
+	function getCreatedby(){
+		return $this->createdby;
+	}
+	//set createdby
+	function setCreatedby($createdby){
+		$this->createdby=$createdby;
+	}
+
+	//get createdon
+	function getCreatedon(){
+		return $this->createdon;
+	}
+	//set createdon
+	function setCreatedon($createdon){
+		$this->createdon=$createdon;
+	}
+
+	//get lasteditedby
+	function getLasteditedby(){
+		return $this->lasteditedby;
+	}
+	//set lasteditedby
+	function setLasteditedby($lasteditedby){
+		$this->lasteditedby=$lasteditedby;
+	}
+
+	//get lasteditedon
+	function getLasteditedon(){
+		return $this->lasteditedon;
+	}
+	//set lasteditedon
+	function setLasteditedon($lasteditedon){
+		$this->lasteditedon=$lasteditedon;
+	}
+
+	function add($obj,$shop){
+		$assetsDBO = new AssetsDBO();
+		$num=count($shop);
+		$i=0;
+		$total=0;
+		while($i<$num){
+			$obj->name=$shop[$i]['name'];
+			$obj->photo=$shop[$i]['photo'];
+			$obj->categoryid=$shop[$i]['categoryid'];
+			$obj->categoryname=$shop[$i]['categoryname'];
+			$obj->value=$shop[$i]['value'];
+			$obj->salvagevalue=$shop[$i]['salvagevalue'];
+			$obj->deliveryno=$shop[$i]['deliveryno'];
+			$obj->remarks=$shop[$i]['remarks'];
+			if($assetsDBO->persist($obj)){		
+				$this->id=$assetsDBO->id;
+				$this->sql=$assetsDBO->sql;
+			}
+			$i++;
+		}
+
+			//adding general journal account(s)
+		$name=$obj->name;
+		$obj->name=$name." Fixed Asset ";
+		$generaljournalaccounts = new Generaljournalaccounts();
+		$obj->refid=$assets->id;
+		$obj->acctypeid=7;
+		$generaljournalaccounts->setObject($obj);
+		$generaljournalaccounts->add($generaljournalaccounts);
+
+
+				//Make a journal entry
+
+				//retrieve account to debit
+		$generaljournalaccounts = new Generaljournalaccounts();
+		$fields="*";
+		$where=" where refid='$obj->supplierid' and acctypeid='30'";
+		$join="";
+		$having="";
+		$groupby="";
+		$orderby="";
+		$generaljournalaccounts->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+		$generaljournalaccounts=$generaljournalaccounts->fetchObject;
+
+				//retrieve account to credit
+		$generaljournalaccounts2 = new Generaljournalaccounts();
+		$fields="*";
+		$where=" where refid='1' and acctypeid='26'";
+		$join="";
+		$having="";
+		$groupby="";
+		$orderby="";
+		$generaljournalaccounts2->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+		$generaljournalaccounts2=$generaljournalaccounts2->fetchObject;
+
+				//Get transaction Identity
+		$transaction = new Transactions();
+		$fields="*";
+		$where=" where lower(replace(name,' ',''))='purchases'";
+		$join="";
+		$having="";
+		$groupby="";
+		$orderby="";
+		$transaction->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+		$transaction=$transaction->fetchObject;
+
+		$ob->transactdate=$obj->purchasedon;
+
+				//make debit entry
+		$generaljournal = new Generaljournals();
+		$ob->tid=$assets->id;
+		$ob->documentno="$obj->documentno";
+		$ob->remarks="$generaljournalaccounts->name($obj->name)";
+		$ob->memo=$assets->remarks;
+		$ob->accountid=$generaljournalaccounts->id;
+		$ob->daccountid=$generaljournalaccounts2->id;
+		$ob->transactionid=$transaction->id;
+		$ob->mode="credit";
+		$ob->debit=$obj->value;
+		$ob->credit=;
+		$generaljournal->setObject($ob);
+		$generaljournal->add($generaljournal);
+
+				//make credit entry
+		$generaljournal2 = new Generaljournals();
+		$ob->tid=$assets->id;
+		$ob->documentno=$obj->documentno;
+		$ob->remarks="Purchase of $obj->name";
+		$ob->memo=$assets->remarks;
+		$ob->daccountid=$generaljournalaccounts->id;
+		$ob->accountid=$generaljournalaccounts2->id;
+		$ob->transactionid=$transaction->id;
+		$ob->mode="credit";
+		$ob->debit=;
+		$ob->credit=$obj->value;
+		$ob->did=$generaljournal->id;
+		$generaljournal2->setObject($ob);
+		$generaljournal2->add($generaljournal2);
+
+		$generaljournal->did=$generaljournal2->id;
+		$generaljournal->edit($generaljournal);
+
+		return true;	
+	}			
+	function edit($obj,$where="",$shop){
+		$assetsDBO = new AssetsDBO();
+
+		//first delete all records under old documentno
+		$where=" where documentno='$obj->olddocumentno' and mode='$obj->oldmode'";
+		$assetsDBO->delete($obj,$where);
+
+		$gn = new GeneralJournals();
+		$where=" where documentno='$obj->olddocumentno' and transactionid='2' mode='$obj->oldmode' ";
+		$gn->delete($obj,$where);
+
+		$num=count($shop);
+		$i=0;
+		$total=0;
+		while($i<$num){
+			$obj->name=$shop['name'];
+			$obj->photo=$shop['photo'];
+			$obj->categoryid=$shop['categoryid'];
+			$obj->categoryname=$shop['categoryname'];
+			$obj->value=$shop['value'];
+			$obj->salvagevalue=$shop['salvagevalue'];
+			$obj->deliveryno=$shop['deliveryno'];
+			$obj->remarks=$shop['remarks'];
+			if($assetsDBO->update($obj,$where)){
+				$this->sql=$assetsDBO->sql;
+			}
+		}
+
+			//adding general journal account(s)
+		$name=$obj->name;
+		$obj->name=$name." Fixed Asset ";
+		$generaljournalaccounts = new Generaljournalaccounts();
+		$obj->refid=$assets->id;
+		$obj->acctypeid=7;
+		$generaljournalaccounts->setObject($obj);
+		$generaljournalaccounts->add($generaljournalaccounts);
+
+
+				//Make a journal entry
+
+				//retrieve account to debit
+		$generaljournalaccounts = new Generaljournalaccounts();
+		$fields="*";
+		$where=" where refid='$obj->supplierid' and acctypeid='30'";
+		$join="";
+		$having="";
+		$groupby="";
+		$orderby="";
+		$generaljournalaccounts->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+		$generaljournalaccounts=$generaljournalaccounts->fetchObject;
+
+				//retrieve account to credit
+		$generaljournalaccounts2 = new Generaljournalaccounts();
+		$fields="*";
+		$where=" where refid='1' and acctypeid='26'";
+		$join="";
+		$having="";
+		$groupby="";
+		$orderby="";
+		$generaljournalaccounts2->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+		$generaljournalaccounts2=$generaljournalaccounts2->fetchObject;
+
+				//Get transaction Identity
+		$transaction = new Transactions();
+		$fields="*";
+		$where=" where lower(replace(name,' ',''))='purchases'";
+		$join="";
+		$having="";
+		$groupby="";
+		$orderby="";
+		$transaction->retrieve($fields, $join, $where, $having, $groupby, $orderby);
+		$transaction=$transaction->fetchObject;
+
+		$ob->transactdate=$obj->purchasedon;
+
+				//make debit entry
+		$generaljournal = new Generaljournals();
+		$ob->tid=$assets->id;
+		$ob->documentno="$obj->documentno";
+		$ob->remarks="$generaljournalaccounts->name($obj->name)";
+		$ob->memo=$assets->remarks;
+		$ob->accountid=$generaljournalaccounts->id;
+		$ob->daccountid=$generaljournalaccounts2->id;
+		$ob->transactionid=$transaction->id;
+		$ob->mode="credit";
+		$ob->debit=$obj->value;
+		$ob->credit=;
+		$generaljournal->setObject($ob);
+		$generaljournal->add($generaljournal);
+
+				//make credit entry
+		$generaljournal2 = new Generaljournals();
+		$ob->tid=$assets->id;
+		$ob->documentno=$obj->documentno;
+		$ob->remarks="Purchase of $obj->name";
+		$ob->memo=$assets->remarks;
+		$ob->daccountid=$generaljournalaccounts->id;
+		$ob->accountid=$generaljournalaccounts2->id;
+		$ob->transactionid=$transaction->id;
+		$ob->mode="credit";
+		$ob->debit=;
+		$ob->credit=$obj->value;
+		$ob->did=$generaljournal->id;
+		$generaljournal2->setObject($ob);
+		$generaljournal2->add($generaljournal2);
+
+		$generaljournal->did=$generaljournal2->id;
+		$generaljournal->edit($generaljournal);
+
+		return true;	
+	}			
+	function delete($obj,$where=""){			
+		$assetsDBO = new AssetsDBO();
+		if($assetsDBO->delete($obj,$where=""))		
+			$this->sql=$assetsDBO->sql;
+			return true;	
+	}			
+	function retrieve($fields,$join,$where,$having,$groupby,$orderby){			
+		$assetsDBO = new AssetsDBO();
+		$this->table=$assetsDBO->table;
+		$assetsDBO->retrieve($fields,$join,$where,$having,$groupby,$orderby);		
+		$this->sql=$assetsDBO->sql;
+		$this->result=$assetsDBO->result;
+		$this->fetchObject=$assetsDBO->fetchObject;
+		$this->affectedRows=$assetsDBO->affectedRows;
+	}			
+	function validate($obj){
+		if(empty($obj->name)){
+			$error="Asset Name should be provided";
+		}
+		else if(empty($obj->categoryid)){
+			$error="Asset Category should be provided";
+		}
+	
+		if(!empty($error))
+			return $error;
+		else
+			return null;
+	
+	}
+
+	function validates($obj){
+	
+			return null;
+	
+	}
+}				
+?>
