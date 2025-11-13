@@ -175,13 +175,13 @@ html, body { margin:0; padding:0; font-family:var(--font-family); font-size:12px
 JsBarcode("#barcode", "<?php echo addslashes($orderNo); ?>", {format:"CODE39", width:1, height:40, displayValue:true, fontSize:12});
 
 // auto print
-window.onload = function(){ window.print(); }
-// window.onload = function(){
-//     window.print();
-//     // close after a short delay to allow print dialog to trigger
-//     setTimeout(function(){ window.close(); }, 500);
-// };
-// </script>
+// window.onload = function(){ window.print(); }
+window.onload = function(){
+    window.print();
+    // close after a short delay to allow print dialog to trigger
+    setTimeout(function(){ window.close(); }, 500);
+};
+</script>
 
 </body>
 </html>
