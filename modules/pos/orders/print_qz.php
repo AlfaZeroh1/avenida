@@ -71,7 +71,6 @@ $dateTime = date("d/m/Y H:i:s");
 <script src="https://cdnjs.cloudflare.com/ajax/libs/rsvp/4.8.5/rsvp.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.1.0/qz-tray.js"></script>
 
-
 <style>
 :root { --receipt-width-mm: 72mm; --font-family: "DejaVu Sans", Arial, sans-serif; --txt-color: #000; }
 html, body { margin:0; padding:0; font-family:var(--font-family); font-size:12px; color:var(--txt-color); }
@@ -143,41 +142,53 @@ html, body { margin:0; padding:0; font-family:var(--font-family); font-size:12px
 <script>
 JsBarcode("#barcode", "<?php echo addslashes($orderNo); ?>", {format:"CODE39", width:1, height:40, displayValue:true, fontSize:12});
 
-// Prepare printable data
-function getReceiptHTML() {
-  return document.getElementById('receipt').outerHTML;
+function getReceiptHTML(copyLabel = "") {
+  let html = document.getElementById('receipt').outerHTML;
+  if (copyLabel) {
+    html += `<div style="text-align:center;font-size:11px;margin-top:6px;font-weight:bold;">${copyLabel}</div>`;
+  }
+  return html;
 }
 
-// Send to printer using QZ Tray
-async function printReceipt(printerName, copies = 2) {
+// Safe unified print logic
+async function doPrint(printerName, copyLabel) {
+  if (!printerName) {
+    console.warn("No printer name provided for this copy.");
+    return;
+  }
   try {
     if (!qz.websocket.isActive()) await qz.websocket.connect();
 
-    let data = [];
-    let html = getReceiptHTML();
+    const html = getReceiptHTML(copyLabel);
+    const cut = "\x1D\x56\x00";
+    const data = [
+      { type: 'html', format: 'plain', data: html },
+      { type: 'raw', format: 'plain', data: cut }
+    ];
 
-    for (let i = 0; i < copies; i++) {
-      data.push({ type: 'html', format: 'plain', data: html });
-      data.push({ type: 'raw', format: 'plain', data: '\x1D\x56\x00' }); // ESC/POS cut
-    }
-
-    let config = qz.configs.create(printerName, { copies: 1 });
+    const config = qz.configs.create(printerName);
     await qz.print(config, data);
-    console.log("Printed " + copies + " copies successfully");
-    setTimeout(() => window.close(), 500);
-  } catch (e) {
-    alert("Printing failed: " + e.message);
-    console.error(e);
+    console.log(`Printed ${copyLabel} on ${printerName}`);
+  } catch (err) {
+    alert("Printing failed: " + err.message);
+    console.error(err);
   }
 }
 
-window.onload = function() {
-  let printer = "<?php echo addslashes($order->printer ?: ''); ?>";
-  if (!printer) {
-    alert("No printer configured for this branch.");
+window.onload = async function() {
+  const printer1 = "<?php echo addslashes($order->printer ?: ''); ?>";
+  const printer2 = "<?php echo addslashes($order->printer2 ?: ''); ?>";
+
+  if (!printer1 && !printer2) {
+    alert("No printers configured for this branch.");
     return;
   }
-  printReceipt(printer, 2);
+
+  await doPrint(printer1, "Customer Copy");
+  await doPrint(printer2, "Kitchen Copy");
+
+  if (qz.websocket.isActive()) qz.websocket.disconnect();
+  setTimeout(() => window.close(), 1000);
 };
 </script>
 </body>
