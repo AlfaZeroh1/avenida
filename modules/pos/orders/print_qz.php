@@ -139,8 +139,15 @@ html, body { margin:0; padding:0; font-family:var(--font-family); font-size:12px
   </div>
 </div>
 
+
 <script>
-JsBarcode("#barcode", "<?php echo addslashes($orderNo); ?>", {format:"CODE39", width:1, height:40, displayValue:true, fontSize:12});
+JsBarcode("#barcode", "<?php echo addslashes($orderNo); ?>", {
+  format: "CODE39",
+  width: 1,
+  height: 40,
+  displayValue: true,
+  fontSize: 12
+});
 
 function getReceiptHTML(copyLabel = "") {
   let html = document.getElementById('receipt').outerHTML;
@@ -150,46 +157,62 @@ function getReceiptHTML(copyLabel = "") {
   return html;
 }
 
-// Safe unified print logic
-async function doPrint(printerName, copyLabel) {
-  if (!printerName) {
-    console.warn("No printer name provided for this copy.");
-    return;
+// Connect to QZ Tray safely
+async function ensureQZ() {
+  if (!qz.websocket.isActive()) {
+    await qz.websocket.connect();
   }
+}
+
+// Main print routine
+async function doPrint(printerName, copyLabel) {
   try {
-    if (!qz.websocket.isActive()) await qz.websocket.connect();
+    await ensureQZ();
+
+    if (!printerName || printerName.trim() === "") {
+      // fallback to first available printer
+      const printers = await qz.printers.find();
+      if (!printers || printers.length === 0) {
+        alert("No printers available.");
+        return;
+      }
+      printerName = printers[0];
+      console.warn("No printer configured. Using first available:", printerName);
+    }
 
     const html = getReceiptHTML(copyLabel);
-    const cut = "\x1D\x56\x00";
     const data = [
       { type: 'html', format: 'plain', data: html },
-      { type: 'raw', format: 'plain', data: cut }
+      { type: 'raw', format: 'plain', data: '\x1D\x56\x00' } // cut
     ];
 
-    const config = qz.configs.create(printerName);
-    await qz.print(config, data);
+    const cfg = qz.configs.create(String(printerName)); // ensure it's a string
+    await qz.print(cfg, data);
     console.log(`Printed ${copyLabel} on ${printerName}`);
   } catch (err) {
     alert("Printing failed: " + err.message);
-    console.error(err);
+    console.error("QZ Print error:", err);
   }
 }
 
 window.onload = async function() {
-  const printer1 = "<?php echo addslashes($order->printer ?: ''); ?>";
-  const printer2 = "<?php echo addslashes($order->printer2 ?: ''); ?>";
+  try {
+    const printer1 = "<?php echo addslashes($order->printer ?? ''); ?>";
+    const printer2 = "<?php echo addslashes($order->printer2 ?? ''); ?>";
 
-  if (!printer1 && !printer2) {
-    alert("No printers configured for this branch.");
-    return;
+    await doPrint(printer1, "Customer Copy");
+    await doPrint(printer2, "Kitchen Copy");
+
+    if (qz.websocket.isActive()) qz.websocket.disconnect();
+    setTimeout(() => window.close(), 1500);
+  } catch (err) {
+    alert("Printing setup failed: " + err.message);
+    console.error(err);
   }
-
-  await doPrint(printer1, "Customer Copy");
-  await doPrint(printer2, "Kitchen Copy");
-
-  if (qz.websocket.isActive()) qz.websocket.disconnect();
-  setTimeout(() => window.close(), 1000);
 };
 </script>
+
+
+
 </body>
 </html>
