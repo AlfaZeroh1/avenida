@@ -166,7 +166,7 @@ function ensureQZ() {
 
 function doPrint(copyLabel) {
   ensureQZ().then(function() {
-    var printerName = "<?php echo addslashes($order->printer ?? ''); ?>";
+    var printerName = "<?php echo addslashes(isset($order->printer) ? $order->printer : ''); ?>";
     if (!printerName || printerName.trim() === "") {
       return qz.printers.find().then(function(printers) {
         if (!printers || printers.length === 0) {
@@ -192,7 +192,7 @@ function actuallyPrint(printerName, copyLabel) {
     { type: 'html', format: 'plain', data: html },
     { type: 'raw', format: 'plain', data: '\x1D\x56\x00' }
   ];
-  var cfg = qz.configs.create("<?php echo addslashes($order->printer ?? ''); ?>");
+  var cfg = qz.configs.create("<?php echo addslashes(isset($order->printer) ? $order->printer : ''); ?>");
   return qz.print(cfg, data);
 }
 
