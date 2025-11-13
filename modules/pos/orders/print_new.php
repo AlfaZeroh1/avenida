@@ -1,0 +1,178 @@
+<?php
+// receipt_print_auto.php
+session_start();
+
+// required project includes (adjust relative paths if needed)
+require '../../../autoload.php';
+require_once "../../../DB.php";
+require_once "../../../lib.php";
+require_once '../../sys/config/Config_class.php';
+require_once("../../pos/orders/Orders_class.php");
+require_once("../../pos/orderdetails/Orderdetails_class.php");
+
+$db = new DB();
+
+// Ensure doc/order param present
+if (!isset($_GET['doc']) || trim($_GET['doc']) === '') {
+    echo "Missing order reference (use ?doc=ORDERNO).";
+    exit;
+}
+
+$doc = mysql_real_escape_string($_GET['doc']); // php5.6 mysql_* used in your codebase
+
+// Fetch order
+$orders = new Orders();
+$fields = "pos_orders.*, sys_branches.name branchename, sys_branches.printer, sys_branches.printer2, pos_orders.id as ids";
+$join = " LEFT JOIN sys_branches ON sys_branches.id = pos_orders.brancheid ";
+$where = " WHERE pos_orders.orderno = '{$doc}' ";
+$orders->retrieve($fields, $join, $where);
+$order = $orders->fetchObject;
+
+if (!$order) {
+    echo "Order not found: " . htmlspecialchars($doc);
+    exit;
+}
+
+// Fetch company header
+$config = new Config();
+$config->retrieve(" * ", "", " WHERE id IN (1,2,9) ");
+$company_lines = [];
+while ($con = mysql_fetch_object($config->result)) {
+    $company_lines[] = $con->value;
+}
+
+// Fetch order items
+$orderdetails = new Orderdetails();
+$fields = "SUM(pos_orderdetails.quantity) quantity, inv_items.name itemname, pos_orderdetails.price, SUM(pos_orderdetails.quantity*pos_orderdetails.price) total, inv_items.warmth war, CASE WHEN inv_items.warmth=1 THEN CASE WHEN pos_orderdetails.warmth=1 THEN 'Warm' ELSE 'Cold' END ELSE '' END warm";
+$join = " LEFT JOIN inv_items ON pos_orderdetails.itemid=inv_items.id ";
+$groupby = " GROUP BY pos_orderdetails.itemid, price, pos_orderdetails.warmth ";
+$where = " WHERE orderid IN (" . $order->ids . ") ";
+$orderdetails->retrieve($fields, $join, $where, "", $groupby, "");
+$items = [];
+$total = 0.0;
+while ($row = mysql_fetch_object($orderdetails->result)) {
+    if (!empty($row->warm)) $row->itemname .= " - " . $row->warm;
+    $items[] = $row;
+    $total += ($row->price * $row->quantity);
+}
+
+// helper format
+function fmt($n) {
+    return number_format($n, 2);
+}
+
+// metadata
+$servedBy = ""; 
+if (!empty($order->createdby)) {
+    $q = "SELECT CONCAT(TRIM(hrm_employees.firstname), ' ', TRIM(hrm_employees.middlename), ' ', TRIM(hrm_employees.lastname)) employeename FROM hrm_employees LEFT JOIN auth_users ON hrm_employees.id = auth_users.employeeid WHERE auth_users.id = '" . mysql_real_escape_string($order->createdby) . "'";
+    $er = mysql_query($q);
+    if ($er) {
+        $eo = mysql_fetch_object($er);
+        if ($eo) $servedBy = $eo->employeename;
+    }
+}
+
+$branchName = isset($order->branchename) ? $order->branchename : '';
+$orderNo = isset($order->orderno) ? $order->orderno : $doc;
+$dateTime = date("d/m/Y H:i:s");
+?>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Receipt - <?php echo htmlspecialchars($orderNo); ?></title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+
+<style>
+:root { --receipt-width-mm: 72mm; --font-family: "DejaVu Sans", Arial, sans-serif; --txt-color: #000; }
+@page { size: var(--receipt-width-mm) auto; margin: 2mm; }
+html, body { margin:0; padding:0; font-family:var(--font-family); font-size:12px; color:var(--txt-color); }
+.receipt { width: calc(var(--receipt-width-mm) - 6mm); margin:0 auto; padding:6px 3mm; box-sizing:border-box; }
+.header { text-align:center; margin-bottom:6px; }
+.header .company { font-weight:700; font-size:13px; letter-spacing:0.5px; }
+.header .small { font-size:10px; }
+.meta { margin-bottom:6px; font-size:11px; }
+.meta .row { display:flex; justify-content:space-between; }
+.items { width:100%; border-collapse:collapse; margin-bottom:6px; }
+.items thead th { text-align:left; font-size:11px; padding-bottom:4px; }
+.items tbody td { padding:3px 0; font-size:11px; }
+.item-name { max-width:38mm; word-wrap:break-word; }
+.qty, .price, .total { text-align:right; min-width:16mm; }
+.totals { margin-top:6px; font-size:11px; }
+.totals .row { display:flex; justify-content:space-between; padding:2px 0; border-bottom:none; }
+.footer { margin-top:8px; text-align:center; font-size:10px; }
+@media print { .no-print{display:none;} .receipt{margin:0; padding:0;} }
+</style>
+</head>
+<body>
+
+<div class="receipt" id="receipt">
+  <div class="header">
+    <?php foreach ($company_lines as $i => $line): ?>
+      <?php if ($i === 0): ?>
+        <div class="company"><?php echo htmlspecialchars($line); ?></div>
+      <?php else: ?>
+        <div class="small"><?php echo htmlspecialchars($line); ?></div>
+      <?php endif; ?>
+    <?php endforeach; ?>
+    <div style="margin-top:6px;"><svg id="barcode"></svg></div>
+  </div>
+
+  <div class="meta">
+    <div class="row"><div>Served By:</div><div><?php echo htmlspecialchars($servedBy); ?></div></div>
+    <div class="row"><div>Table No:</div><div><?php echo htmlspecialchars($order->tableno); ?></div></div>
+    <div class="row"><div>Location:</div><div><?php echo htmlspecialchars($branchName); ?></div></div>
+    <div class="row"><div>Order No:</div><div><?php echo htmlspecialchars($orderNo); ?></div></div>
+    <div class="row"><div>Time:</div><div><?php echo htmlspecialchars($dateTime); ?></div></div>
+  </div>
+
+  <table class="items">
+    <thead>
+      <tr>
+        <th>ITEM</th><th class="qty">QTY</th><th class="price">PRICE</th><th class="total">TOTAL</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php foreach ($items as $it): ?>
+      <tr>
+        <td class="item-name"><?php echo htmlspecialchars($it->itemname); ?></td>
+        <td class="qty"><?php echo (int)$it->quantity; ?></td>
+        <td class="price"><?php echo fmt($it->price); ?></td>
+        <td class="total"><?php echo fmt($it->total); ?></td>
+      </tr>
+      <?php endforeach; ?>
+    </tbody>
+  </table>
+
+  <div class="totals">
+    <?php
+      $vat_base = $total*0.84;
+      $vat_amount = $total*0.16;
+    ?>
+    <div class="row"><div>TOTAL (excl VAT)</div><div><?php echo fmt($vat_base); ?></div></div>
+    <div class="row"><div>VAT (16%)</div><div><?php echo fmt($vat_amount); ?></div></div>
+    <div class="row" style="font-weight:700; font-size:12px;"><div>TOTAL</div><div><?php echo fmt($total); ?></div></div>
+  </div>
+
+  <div style="margin-top:6px; border-top:1px dashed #000; padding-top:6px;">
+    <?php
+      $q = "SELECT value FROM sys_config WHERE name='receiptfootnote' LIMIT 1";
+      $r = mysql_query($q);
+      if ($r && mysql_num_rows($r)) { $rw = mysql_fetch_object($r); echo '<div class="footer">'.htmlspecialchars($rw->value).'</div>'; }
+    ?>
+    <div class="footer">Developer: Gamil Tech - 0721716051</div>
+  </div>
+</div>
+
+<script>
+JsBarcode("#barcode", "<?php echo addslashes($orderNo); ?>", {format:"CODE39", width:1, height:40, displayValue:true, fontSize:12});
+
+// auto print
+window.onload = function(){ window.print(); };
+</script>
+
+</body>
+</html>

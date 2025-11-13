@@ -272,7 +272,15 @@ function setOrder(orderno){
 	?>
 		<tr style="color:<?php echo $color; ?>">
 			<td><?php echo $i; ?></td>
-			<td><input type='checkbox' id="<?php echo $row->orderno; ?>" onClick="setOrder('<?php echo $row->orderno; ?>');"/>
+			<!-- <td><input type='checkbox' id="<?php //echo $row->orderno; ?>" onClick="setOrder('<?php //echo $row->orderno; ?>');"/> -->
+			 <td>
+				<input type="button" 
+					value="Print" 
+					class="btn btn-sm btn-outline-success" 
+					onclick="window.open('print_new.php?doc=<?php echo $row->orderno; ?>', 'printWindow', 'width=800,height=600');">
+			</td>
+
+			
 			<td><a href="javascript:;" onClick="showPopWin('orderss.php?orderno=<?php echo $row->orderno; ?>&pop=1', 800,600)"><?php echo $row->orderno; ?></a></td>
 <!-- 			<td><?php echo $row->shiftid; ?></td> -->
 			<td><?php echo strtoupper($row->username); ?></td>
