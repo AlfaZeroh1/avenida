@@ -29,6 +29,7 @@ class Branches
 		$this->type=str_replace("'","\'",$obj->type);
 		$this->visible=str_replace("'","\'",$obj->visible);
 		$this->personnel=str_replace("'","\'",$obj->personnel);
+		if(empty($this->personnel)){ $this->personnel = 0;}
 		$this->printer=$obj->printer;
 		$this->printer2=$obj->printer2;
 		$this->ipaddress=str_replace("'","\'",$obj->ipaddress);
