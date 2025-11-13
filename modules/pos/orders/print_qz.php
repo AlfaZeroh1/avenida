@@ -25,7 +25,7 @@ if (!$order) { echo "Order not found: " . htmlspecialchars($doc); exit; }
 
 $config = new Config();
 $config->retrieve(" * ", "", " WHERE id IN (1,2,9) ");
-$company_lines = [];
+$company_lines = array();
 while ($con = mysql_fetch_object($config->result)) $company_lines[] = $con->value;
 
 $orderdetails = new Orderdetails();
@@ -36,7 +36,7 @@ $join = " LEFT JOIN inv_items ON pos_orderdetails.itemid=inv_items.id ";
 $groupby = " GROUP BY pos_orderdetails.itemid, price, pos_orderdetails.warmth ";
 $where = " WHERE orderid IN (" . $order->ids . ") ";
 $orderdetails->retrieve($fields, $join, $where, "", $groupby, "");
-$items = [];
+$items = array();
 $total = 0.0;
 while ($row = mysql_fetch_object($orderdetails->result)) {
     if (!empty($row->warm)) $row->itemname .= " - " . $row->warm;
@@ -139,7 +139,6 @@ html, body { margin:0; padding:0; font-family:var(--font-family); font-size:12px
   </div>
 </div>
 
-
 <script>
 JsBarcode("#barcode", "<?php echo addslashes($orderNo); ?>", {
   format: "CODE39",
@@ -149,70 +148,68 @@ JsBarcode("#barcode", "<?php echo addslashes($orderNo); ?>", {
   fontSize: 12
 });
 
-function getReceiptHTML(copyLabel = "") {
-  let html = document.getElementById('receipt').outerHTML;
+function getReceiptHTML(copyLabel) {
+  var html = document.getElementById('receipt').outerHTML;
   if (copyLabel) {
-    html += `<div style="text-align:center;font-size:11px;margin-top:6px;font-weight:bold;">${copyLabel}</div>`;
+    html += '<div style="text-align:center;font-size:11px;margin-top:6px;font-weight:bold;">' + copyLabel + '</div>';
   }
   return html;
 }
 
-// Connect to QZ Tray safely
-async function ensureQZ() {
+function ensureQZ() {
   if (!qz.websocket.isActive()) {
-    await qz.websocket.connect();
+    return qz.websocket.connect();
+  } else {
+    return Promise.resolve();
   }
 }
 
-// Main print routine
-async function doPrint(printerName, copyLabel) {
-  try {
-    await ensureQZ();
-
+function doPrint(printerName, copyLabel) {
+  ensureQZ().then(function() {
     if (!printerName || printerName.trim() === "") {
-      // fallback to first available printer
-      const printers = await qz.printers.find();
-      if (!printers || printers.length === 0) {
-        alert("No printers available.");
-        return;
-      }
-      printerName = printers[0];
-      console.warn("No printer configured. Using first available:", printerName);
+      return qz.printers.find().then(function(printers) {
+        if (!printers || printers.length === 0) {
+          alert("No printers available.");
+          return;
+        }
+        printerName = printers[0];
+        console.warn("No printer configured. Using first available:", printerName);
+        return actuallyPrint(printerName, copyLabel);
+      });
+    } else {
+      return actuallyPrint(printerName, copyLabel);
     }
-
-    const html = getReceiptHTML(copyLabel);
-    const data = [
-      { type: 'html', format: 'plain', data: html },
-      { type: 'raw', format: 'plain', data: '\x1D\x56\x00' } // cut
-    ];
-
-    const cfg = qz.configs.create(String(printerName)); // ensure it's a string
-    await qz.print(cfg, data);
-    console.log(`Printed ${copyLabel} on ${printerName}`);
-  } catch (err) {
+  }).catch(function(err) {
     alert("Printing failed: " + err.message);
     console.error("QZ Print error:", err);
-  }
+  });
 }
 
-window.onload = async function() {
-  try {
-    const printer1 = "<?php echo addslashes($order->printer ?? ''); ?>";
-    const printer2 = "<?php echo addslashes($order->printer2 ?? ''); ?>";
+function actuallyPrint(printerName, copyLabel) {
+  var html = getReceiptHTML(copyLabel);
+  var data = [
+    { type: 'html', format: 'plain', data: html },
+    { type: 'raw', format: 'plain', data: '\x1D\x56\x00' }
+  ];
+  var cfg = qz.configs.create(String(printerName));
+  return qz.print(cfg, data);
+}
 
-    await doPrint(printer1, "Customer Copy");
-    await doPrint(printer2, "Kitchen Copy");
+window.onload = function() {
+  var printer1 = "<?php echo isset($order->printer) ? addslashes($order->printer) : ''; ?>";
+  var printer2 = "<?php echo isset($order->printer2) ? addslashes($order->printer2) : ''; ?>";
 
+  doPrint(printer1, "Customer Copy").then(function() {
+    return doPrint(printer2, "Kitchen Copy");
+  }).then(function() {
     if (qz.websocket.isActive()) qz.websocket.disconnect();
-    setTimeout(() => window.close(), 1500);
-  } catch (err) {
+    setTimeout(function() { window.close(); }, 1500);
+  }).catch(function(err) {
     alert("Printing setup failed: " + err.message);
     console.error(err);
-  }
+  });
 };
 </script>
-
-
 
 </body>
 </html>
