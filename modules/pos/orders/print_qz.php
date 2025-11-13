@@ -1,5 +1,5 @@
 <?php
-// receipt_print_qz.php  (PHP 5.6)
+// receipt_print_qz.php
 session_start();
 require_once "../../../DB.php";
 require_once '../../sys/config/Config_class.php';
@@ -9,11 +9,12 @@ require_once("../../pos/orderdetails/Orderdetails_class.php");
 $db = new DB();
 
 if (!isset($_GET['doc']) || trim($_GET['doc']) === '') {
-    echo "Missing order reference (?doc=ORDERNO)."; exit;
+    echo "Missing order reference (use ?doc=ORDERNO).";
+    exit;
 }
+
 $doc = mysql_real_escape_string($_GET['doc']);
 
-// --- fetch order (same your existing method) ---
 $orders = new Orders();
 $fields = "pos_orders.*, sys_branches.name branchename, sys_branches.printer, sys_branches.printer2, pos_orders.id as ids";
 $join = " LEFT JOIN sys_branches ON sys_branches.id = pos_orders.brancheid ";
@@ -22,31 +23,35 @@ $orders->retrieve($fields, $join, $where);
 $order = $orders->fetchObject;
 if (!$order) { echo "Order not found: " . htmlspecialchars($doc); exit; }
 
-// --- company lines ---
 $config = new Config();
 $config->retrieve(" * ", "", " WHERE id IN (1,2,9) ");
-$company_lines = array();
+$company_lines = [];
 while ($con = mysql_fetch_object($config->result)) $company_lines[] = $con->value;
 
-// --- order items ---
 $orderdetails = new Orderdetails();
-$fields = "SUM(pos_orderdetails.quantity) quantity, inv_items.name itemname, pos_orderdetails.price, SUM(pos_orderdetails.quantity*pos_orderdetails.price) total, inv_items.warmth war, CASE WHEN inv_items.warmth=1 THEN CASE WHEN pos_orderdetails.warmth=1 THEN 'Warm' ELSE 'Cold' END ELSE '' END warm";
+$fields = "SUM(pos_orderdetails.quantity) quantity, inv_items.name itemname, pos_orderdetails.price, 
+           SUM(pos_orderdetails.quantity*pos_orderdetails.price) total, inv_items.warmth war,
+           CASE WHEN inv_items.warmth=1 THEN CASE WHEN pos_orderdetails.warmth=1 THEN 'Warm' ELSE 'Cold' END ELSE '' END warm";
 $join = " LEFT JOIN inv_items ON pos_orderdetails.itemid=inv_items.id ";
 $groupby = " GROUP BY pos_orderdetails.itemid, price, pos_orderdetails.warmth ";
 $where = " WHERE orderid IN (" . $order->ids . ") ";
 $orderdetails->retrieve($fields, $join, $where, "", $groupby, "");
-$items = array(); $total = 0.0;
+$items = [];
+$total = 0.0;
 while ($row = mysql_fetch_object($orderdetails->result)) {
     if (!empty($row->warm)) $row->itemname .= " - " . $row->warm;
     $items[] = $row;
     $total += ($row->price * $row->quantity);
 }
 
-function fmt($n) { return number_format($n,2); }
+function fmt($n) { return number_format($n, 2); }
 
 $servedBy = "";
 if (!empty($order->createdby)) {
-    $q = "SELECT CONCAT(TRIM(hrm_employees.firstname),' ',TRIM(hrm_employees.middlename),' ',TRIM(hrm_employees.lastname)) employeename FROM hrm_employees LEFT JOIN auth_users ON hrm_employees.id = auth_users.employeeid WHERE auth_users.id = '". mysql_real_escape_string($order->createdby) ."'";
+    $q = "SELECT CONCAT(TRIM(hrm_employees.firstname), ' ', TRIM(hrm_employees.middlename), ' ', TRIM(hrm_employees.lastname)) employeename 
+          FROM hrm_employees 
+          LEFT JOIN auth_users ON hrm_employees.id = auth_users.employeeid 
+          WHERE auth_users.id = '" . mysql_real_escape_string($order->createdby) . "'";
     $er = mysql_query($q);
     if ($er) { $eo = mysql_fetch_object($er); if ($eo) $servedBy = $eo->employeename; }
 }
@@ -54,132 +59,123 @@ if (!empty($order->createdby)) {
 $branchName = isset($order->branchename) ? $order->branchename : '';
 $orderNo = isset($order->orderno) ? $order->orderno : $doc;
 $dateTime = date("d/m/Y H:i:s");
-
-// --- CONFIG: set your printer name and number of copies here ---
-$printerName = 'PRINTER_NAME_HERE';   // <<< set exactly as in Windows
-$copies = 1;                          // <<< number of copies you want
-
 ?>
 <!doctype html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Receipt - <?php echo htmlspecialchars($orderNo); ?></title>
-
-<!-- QZ Tray JS (use published CDN) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qz-tray/2.1.0/qz-tray.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qz-tray@2.1.0/qz-tray.js"></script>
 
 <style>
-/* minimal receipt styling (72mm) */
-body{margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#000;}
-.receipt{width:72mm;padding:4mm;}
-.header{text-align:center;font-weight:700;}
-.items{width:100%;border-collapse:collapse;margin-top:6px;}
-.items td{padding:2px 0;}
-.right{text-align:right;}
+:root { --receipt-width-mm: 72mm; --font-family: "DejaVu Sans", Arial, sans-serif; --txt-color: #000; }
+html, body { margin:0; padding:0; font-family:var(--font-family); font-size:12px; color:var(--txt-color); }
+.receipt { width: calc(var(--receipt-width-mm) - 6mm); margin:0 auto; padding:6px 3mm; box-sizing:border-box; }
+.header { text-align:center; margin-bottom:6px; }
+.header .company { font-weight:700; font-size:13px; letter-spacing:0.5px; }
+.header .small { font-size:10px; }
+.meta { margin-bottom:6px; font-size:11px; line-height:1.4; }
+.items { width:100%; border-collapse:collapse; margin-bottom:6px; }
+.items thead th { text-align:left; font-size:11px; padding-bottom:4px; }
+.items tbody td { padding:3px 0; font-size:11px; }
+.qty, .price, .total { text-align:right; min-width:16mm; }
+.totals { margin-top:6px; font-size:11px; }
+.totals .row { display:flex; justify-content:space-between; padding:2px 0; }
+.footer { margin-top:8px; text-align:center; font-size:10px; }
+@media print { .no-print{display:none;} .receipt{margin:0; padding:0;} }
 </style>
 </head>
 <body>
 
-<div id="receipt" class="receipt">
+<div class="receipt" id="receipt">
   <div class="header">
     <?php foreach ($company_lines as $i => $line): ?>
-      <?php if ($i===0): ?><div><?php echo htmlspecialchars($line); ?></div>
-      <?php else: ?><div style="font-size:11px;"><?php echo htmlspecialchars($line); ?></div><?php endif; ?>
+      <?php if ($i === 0): ?><div class="company"><?php echo htmlspecialchars($line); ?></div>
+      <?php else: ?><div class="small"><?php echo htmlspecialchars($line); ?></div><?php endif; ?>
     <?php endforeach; ?>
-    <div style="margin-top:6px;">Order: <?php echo htmlspecialchars($orderNo); ?></div>
+    <div style="margin-top:6px;"><svg id="barcode"></svg></div>
   </div>
 
-  <div style="margin-top:6px;">
-    Served By: <?php echo htmlspecialchars($servedBy); ?><br>
-    Table No: <?php echo htmlspecialchars($order->tableno); ?><br>
-    Location: <?php echo htmlspecialchars($branchName); ?><br>
-    Time: <?php echo htmlspecialchars($dateTime); ?><br>
+  <div class="meta">
+    <div>Served By: <?php echo htmlspecialchars($servedBy); ?></div>
+    <div>Table No: <?php echo htmlspecialchars($order->tableno); ?></div>
+    <div>Location: <?php echo htmlspecialchars($branchName); ?></div>
+    <div>Order No: <?php echo htmlspecialchars($orderNo); ?></div>
+    <div>Time: <?php echo htmlspecialchars($dateTime); ?></div>
   </div>
 
-  <table class="items" cellspacing="0" cellpadding="0">
-    <?php foreach($items as $it): ?>
+  <table class="items">
+    <thead><tr><th>ITEM</th><th style="text-align:right">QTY</th><th style="text-align:right">PRICE</th><th style="text-align:right">TOTAL</th></tr></thead>
+    <tbody>
+      <?php foreach ($items as $it): ?>
       <tr>
         <td><?php echo htmlspecialchars($it->itemname); ?></td>
-        <td class="right"><?php echo (int)$it->quantity; ?></td>
-        <td class="right"><?php echo fmt($it->price); ?></td>
-        <td class="right"><?php echo fmt($it->total); ?></td>
+        <td style="text-align:right"><?php echo (int)$it->quantity; ?></td>
+        <td style="text-align:right"><?php echo fmt($it->price); ?></td>
+        <td style="text-align:right"><?php echo fmt($it->total); ?></td>
       </tr>
-    <?php endforeach; ?>
+      <?php endforeach; ?>
+    </tbody>
   </table>
 
-  <div style="margin-top:6px;">
-    <div>TOTAL: <?php echo fmt($total); ?></div>
+  <div class="totals">
+    <?php $vat_base = $total*0.84; $vat_amount = $total*0.16; ?>
+    <div class="row"><div>TOTAL (excl VAT): <?php echo fmt($vat_base); ?></div></div>
+    <div class="row"><div>VAT (16%): <?php echo fmt($vat_amount); ?></div></div>
+    <div class="row" style="font-weight:700; font-size:12px;"><div>TOTAL: <?php echo fmt($total); ?></div></div>
+  </div>
+
+  <div style="margin-top:6px; border-top:1px solid #000; border-bottom:1px dashed #000; padding:6px 0 20px;">
+    <?php
+      $q = "SELECT value FROM sys_config WHERE name='receiptfootnote' LIMIT 1";
+      $r = mysql_query($q);
+      if ($r && mysql_num_rows($r)) { $rw = mysql_fetch_object($r); echo '<div class="footer">'.htmlspecialchars($rw->value).'</div>'; }
+    ?>
+    <div class="footer">Developer: Gamil Tech - 0721716051</div>
   </div>
 </div>
 
 <script>
-// --------- QZ TRAY PRINT SCRIPT ----------
-// Make sure QZ Tray is running on the client machine.
+JsBarcode("#barcode", "<?php echo addslashes($orderNo); ?>", {format:"CODE39", width:1, height:40, displayValue:true, fontSize:12});
 
-(function(){
-  var printerName = <?php echo json_encode($printerName); ?>;
-  var copies = <?php echo (int)$copies; ?>;
-  var receiptHtml = document.getElementById('receipt').innerHTML;
+// Prepare printable data
+function getReceiptHTML() {
+  return document.getElementById('receipt').outerHTML;
+}
 
-  // Helper to show errors (replace with better UI if needed)
-  function showError(msg) {
-    alert('Print error: ' + msg);
-    // fallback: open print dialog if QZ not available
-    // window.print();
+// Send to printer using QZ Tray
+async function printReceipt(printerName, copies = 2) {
+  try {
+    if (!qz.websocket.isActive()) await qz.websocket.connect();
+
+    let data = [];
+    let html = getReceiptHTML();
+
+    for (let i = 0; i < copies; i++) {
+      data.push({ type: 'html', format: 'plain', data: html });
+      data.push({ type: 'raw', format: 'plain', data: '\x1D\x56\x00' }); // ESC/POS cut
+    }
+
+    let config = qz.configs.create(printerName, { copies: 1 });
+    await qz.print(config, data);
+    console.log("Printed " + copies + " copies successfully");
+    setTimeout(() => window.close(), 500);
+  } catch (e) {
+    alert("Printing failed: " + e.message);
+    console.error(e);
   }
+}
 
-  // Connect to QZ Tray
-  function connectQZ() {
-    return qz.websocket.connect().then(function(){
-      console.log('QZ connected');
-    });
+window.onload = function() {
+  let printer = "<?php echo addslashes($order->printer ?: ''); ?>";
+  if (!printer) {
+    alert("No printer configured for this branch.");
+    return;
   }
-
-  // Find the printer (ensures exact name)
-  function findPrinter(name) {
-    return qz.printers.find(name).then(function(found){
-      return found;
-    });
-  }
-
-  // Create printing config with copies
-  function createConfig(printer) {
-    return qz.configs.create(printer, { copies: copies });
-  }
-
-  // Print HTML (simplest). QZ will render HTML to printer.
-  function printHtml(config, html) {
-    var data = [{
-      type: 'html',
-      format: 'plain',
-      data: html
-    }];
-    return qz.print(config, data);
-  }
-
-  // Auto-run: connect, find printer, print, close
-  document.addEventListener('DOMContentLoaded', function(){
-    connectQZ().then(function(){
-      return findPrinter(printerName);
-    }).then(function(foundPrinter){
-      var cfg = createConfig(foundPrinter);
-      return printHtml(cfg, receiptHtml);
-    }).then(function() {
-      console.log('Printed via QZ Tray');
-      // close connection and window
-      setTimeout(function(){
-        qz.websocket.disconnect();
-        window.close();
-      }, 500);
-    }).catch(function(err){
-      console.error(err);
-      showError(err && err.toString ? err.toString() : err);
-    });
-  });
-})();
+  printReceipt(printer, 2);
+};
 </script>
-
 </body>
 </html>
