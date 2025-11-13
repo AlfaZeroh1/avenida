@@ -3,9 +3,9 @@
 session_start();
 
 // required project includes (adjust relative paths if needed)
-require '../../../autoload.php';
+// require '../../../autoload.php';
 require_once "../../../DB.php";
-require_once "../../../lib.php";
+// require_once "../../../lib.php";
 require_once '../../sys/config/Config_class.php';
 require_once("../../pos/orders/Orders_class.php");
 require_once("../../pos/orderdetails/Orderdetails_class.php");
@@ -121,13 +121,14 @@ html, body { margin:0; padding:0; font-family:var(--font-family); font-size:12px
     <div style="margin-top:6px;"><svg id="barcode"></svg></div>
   </div>
 
-  <div class="meta">
-    <div class="row"><div>Served By:</div><div><?php echo htmlspecialchars($servedBy); ?></div></div>
-    <div class="row"><div>Table No:</div><div><?php echo htmlspecialchars($order->tableno); ?></div></div>
-    <div class="row"><div>Location:</div><div><?php echo htmlspecialchars($branchName); ?></div></div>
-    <div class="row"><div>Order No:</div><div><?php echo htmlspecialchars($orderNo); ?></div></div>
-    <div class="row"><div>Time:</div><div><?php echo htmlspecialchars($dateTime); ?></div></div>
-  </div>
+    <div class="meta">
+        <div>Served By: <?php echo htmlspecialchars($servedBy); ?></div>
+        <div>Table No: <?php echo htmlspecialchars($order->tableno); ?></div>
+        <div>Location: <?php echo htmlspecialchars($branchName); ?></div>
+        <div>Order No: <?php echo htmlspecialchars($orderNo); ?></div>
+        <div>Time: <?php echo htmlspecialchars($dateTime); ?></div>
+    </div>
+
 
   <table class="items">
     <thead>
@@ -171,7 +172,12 @@ html, body { margin:0; padding:0; font-family:var(--font-family); font-size:12px
 JsBarcode("#barcode", "<?php echo addslashes($orderNo); ?>", {format:"CODE39", width:1, height:40, displayValue:true, fontSize:12});
 
 // auto print
-window.onload = function(){ window.print(); };
+// window.onload = function(){ window.print(); };
+window.onload = function(){
+    window.print();
+    // close after a short delay to allow print dialog to trigger
+    setTimeout(function(){ window.close(); }, 500);
+};
 </script>
 
 </body>
