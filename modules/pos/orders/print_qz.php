@@ -16,7 +16,7 @@ if (!isset($_GET['doc']) || trim($_GET['doc']) === '') {
 $doc = mysql_real_escape_string($_GET['doc']);
 
 $orders = new Orders();
-$fields = "pos_orders.*, sys_branches.name branchename, sys_branches.printer, sys_branches.printer2, pos_orders.id as ids";
+$fields = "pos_orders.*, sys_branches.name branchename, sys_branches.printer, pos_orders.id as ids";
 $join = " LEFT JOIN sys_branches ON sys_branches.id = pos_orders.brancheid ";
 $where = " WHERE pos_orders.orderno = '{$doc}' ";
 $orders->retrieve($fields, $join, $where);
@@ -164,8 +164,9 @@ function ensureQZ() {
   }
 }
 
-function doPrint(printerName, copyLabel) {
+function doPrint(copyLabel) {
   ensureQZ().then(function() {
+    var printerName = "<?php echo addslashes($order->printer ?? ''); ?>";
     if (!printerName || printerName.trim() === "") {
       return qz.printers.find().then(function(printers) {
         if (!printers || printers.length === 0) {
@@ -191,17 +192,12 @@ function actuallyPrint(printerName, copyLabel) {
     { type: 'html', format: 'plain', data: html },
     { type: 'raw', format: 'plain', data: '\x1D\x56\x00' }
   ];
-  var cfg = qz.configs.create(String(printerName));
+  var cfg = qz.configs.create("<?php echo addslashes($order->printer ?? ''); ?>");
   return qz.print(cfg, data);
 }
 
 window.onload = function() {
-  var printer1 = "<?php echo isset($order->printer) ? addslashes($order->printer) : ''; ?>";
-  var printer2 = "<?php echo isset($order->printer2) ? addslashes($order->printer2) : ''; ?>";
-
-  doPrint(printer1, "Customer Copy").then(function() {
-    return doPrint(printer2, "Kitchen Copy");
-  }).then(function() {
+  doPrint("Customer Copy").then(function() {
     if (qz.websocket.isActive()) qz.websocket.disconnect();
     setTimeout(function() { window.close(); }, 1500);
   }).catch(function(err) {
