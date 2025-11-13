@@ -59,6 +59,9 @@ if (!empty($order->createdby)) {
 $branchName = isset($order->branchename) ? $order->branchename : '';
 $orderNo = isset($order->orderno) ? $order->orderno : $doc;
 $dateTime = date("d/m/Y H:i:s");
+
+// Ensure printer is a safe string for JS
+$printerNameJS = addslashes(isset($order->printer) && $order->printer != '' ? $order->printer : '');
 ?>
 <!doctype html>
 <html lang="en">
@@ -67,7 +70,6 @@ $dateTime = date("d/m/Y H:i:s");
 <title>Receipt - <?php echo htmlspecialchars($orderNo); ?></title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-<!-- Load RSVP promise library before QZ Tray -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/rsvp/4.8.5/rsvp.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.1.0/qz-tray.js"></script>
 
@@ -149,61 +151,68 @@ JsBarcode("#barcode", "<?php echo addslashes($orderNo); ?>", {
 });
 
 function getReceiptHTML(copyLabel) {
-  var html = document.getElementById('receipt').outerHTML;
-  if (copyLabel) {
-    html += '<div style="text-align:center;font-size:11px;margin-top:6px;font-weight:bold;">' + copyLabel + '</div>';
-  }
-  return html;
+    var html = document.getElementById('receipt').outerHTML;
+    if (copyLabel) {
+        html += '<div style="text-align:center;font-size:11px;margin-top:6px;font-weight:bold;">' + copyLabel + '</div>';
+    }
+    return html;
 }
 
 function ensureQZ() {
-  if (!qz.websocket.isActive()) {
-    return qz.websocket.connect();
-  } else {
-    return Promise.resolve();
-  }
+    if (!qz.websocket.isActive()) {
+        return qz.websocket.connect();
+    } else {
+        return Promise.resolve();
+    }
 }
 
 function doPrint(copyLabel) {
-  ensureQZ().then(function() {
-    var printerName = "<?php echo addslashes(isset($order->printer) ? $order->printer : ''); ?>";
-    if (!printerName || printerName.trim() === "") {
-      return qz.printers.find().then(function(printers) {
-        if (!printers || printers.length === 0) {
-          alert("No printers available.");
-          return;
+    ensureQZ().then(function() {
+        var printerName = "<?php echo $printerNameJS; ?>";
+        if (!printerName) {
+            // No printer in DB, use first available
+            return qz.printers.find().then(function(printers) {
+                if (!printers || printers.length === 0) {
+                    alert("No printers available.");
+                    return;
+                }
+                printerName = printers[0];
+                console.warn("No printer in DB. Using first available:", printerName);
+                return actuallyPrint(printerName, copyLabel);
+            });
+        } else {
+            return actuallyPrint(printerName, copyLabel);
         }
-        printerName = printers[0];
-        console.warn("No printer configured. Using first available:", printerName);
-        return actuallyPrint(printerName, copyLabel);
-      });
-    } else {
-      return actuallyPrint(printerName, copyLabel);
-    }
-  }).catch(function(err) {
-    alert("Printing failed: " + err.message);
-    console.error("QZ Print error:", err);
-  });
+    }).catch(function(err) {
+        alert("Printing failed: " + err.message);
+        console.error("QZ Print error:", err);
+    });
 }
 
 function actuallyPrint(printerName, copyLabel) {
-  var html = getReceiptHTML(copyLabel);
-  var data = [
-    { type: 'html', format: 'plain', data: html },
-    { type: 'raw', format: 'plain', data: '\x1D\x56\x00' }
-  ];
-  var cfg = qz.configs.create("<?php echo addslashes(isset($order->printer) ? $order->printer : ''); ?>");
-  return qz.print(cfg, data);
+    var html = getReceiptHTML(copyLabel);
+    var data = [
+        { type: 'html', format: 'plain', data: html },
+        { type: 'raw', format: 'plain', data: '\x1D\x56\x00' } // cut
+    ];
+
+    if (!printerName) {
+        alert("No printer available for QZ Tray.");
+        return Promise.reject("No printer available");
+    }
+
+    var cfg = qz.configs.create(printerName);
+    return qz.print(cfg, data);
 }
 
 window.onload = function() {
-  doPrint("Customer Copy").then(function() {
-    if (qz.websocket.isActive()) qz.websocket.disconnect();
-    setTimeout(function() { window.close(); }, 1500);
-  }).catch(function(err) {
-    alert("Printing setup failed: " + err.message);
-    console.error(err);
-  });
+    doPrint("Customer Copy").then(function() {
+        if (qz.websocket.isActive()) qz.websocket.disconnect();
+        setTimeout(function() { window.close(); }, 1500);
+    }).catch(function(err) {
+        alert("Printing setup failed: " + err.message);
+        console.error(err);
+    });
 };
 </script>
 
