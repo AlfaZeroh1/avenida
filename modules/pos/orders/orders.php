@@ -277,7 +277,7 @@ function setOrder(orderno){
 				<input type="button" 
 					value="Print" 
 					class="btn btn-sm btn-outline-success" 
-					onclick="window.open('print_new.php?doc=<?php echo $row->orderno; ?>', 'printWindow', 'width=800,height=600');">
+					onclick="window.open('print_qz.php?doc=<?php echo $row->orderno; ?>', 'printWindow', 'width=800,height=600');">
 			</td>
 
 			
