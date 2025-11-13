@@ -133,16 +133,19 @@ html, body { margin:0; padding:0; font-family:var(--font-family); font-size:12px
   <table class="items">
     <thead>
       <tr>
-        <th>ITEM</th><th class="qty">QTY</th><th class="price">PRICE</th><th class="total">TOTAL</th>
+        <th>ITEM</th>
+        <th style="text-align:right">QTY</th>
+        <th style="text-align:right">PRICE</th>
+        <th style="text-align:right">TOTAL</th>
       </tr>
     </thead>
     <tbody>
       <?php foreach ($items as $it): ?>
       <tr>
-        <td class="item-name"><?php echo htmlspecialchars($it->itemname); ?></td>
-        <td class="qty"><?php echo (int)$it->quantity; ?></td>
-        <td class="price"><?php echo fmt($it->price); ?></td>
-        <td class="total"><?php echo fmt($it->total); ?></td>
+        <td ><?php echo htmlspecialchars($it->itemname); ?></td>
+        <td style="text-align:right"><?php echo (int)$it->quantity; ?></td>
+        <td style="text-align:right"><?php echo fmt($it->price); ?></td>
+        <td style="text-align:right"><?php echo fmt($it->total); ?></td>
       </tr>
       <?php endforeach; ?>
     </tbody>
@@ -153,12 +156,12 @@ html, body { margin:0; padding:0; font-family:var(--font-family); font-size:12px
       $vat_base = $total*0.84;
       $vat_amount = $total*0.16;
     ?>
-    <div class="row"><div>TOTAL (excl VAT)</div><div><?php echo fmt($vat_base); ?></div></div>
-    <div class="row"><div>VAT (16%)</div><div><?php echo fmt($vat_amount); ?></div></div>
-    <div class="row" style="font-weight:700; font-size:12px;"><div>TOTAL</div><div><?php echo fmt($total); ?></div></div>
+    <div class="row"><div>TOTAL (excl VAT) : <?php echo fmt($vat_base); ?></div></div>
+    <div class="row"><div>VAT (16%) : <?php echo fmt($vat_amount); ?></div></div>
+    <div class="row" style="font-weight:700; font-size:12px;"><div>TOTAL : <?php echo fmt($total); ?></div></div>
   </div>
 
-  <div style="margin-top:6px; border-top:1px dashed #000; padding-top:6px;">
+  <div style="margin-top:6px; border-top:1px solid #000; padding-bottom:20px; border-bottom:1px dashed #000; padding-top:6px;">
     <?php
       $q = "SELECT value FROM sys_config WHERE name='receiptfootnote' LIMIT 1";
       $r = mysql_query($q);
@@ -172,13 +175,13 @@ html, body { margin:0; padding:0; font-family:var(--font-family); font-size:12px
 JsBarcode("#barcode", "<?php echo addslashes($orderNo); ?>", {format:"CODE39", width:1, height:40, displayValue:true, fontSize:12});
 
 // auto print
-// window.onload = function(){ window.print(); };
-window.onload = function(){
-    window.print();
-    // close after a short delay to allow print dialog to trigger
-    setTimeout(function(){ window.close(); }, 500);
-};
-</script>
+window.onload = function(){ window.print(); }
+// window.onload = function(){
+//     window.print();
+//     // close after a short delay to allow print dialog to trigger
+//     setTimeout(function(){ window.close(); }, 500);
+// };
+// </script>
 
 </body>
 </html>
