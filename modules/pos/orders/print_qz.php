@@ -72,6 +72,18 @@ $printerNameJS = addslashes(isset($order->printer) && $order->printer != '' ? $o
 <script src="https://cdnjs.cloudflare.com/ajax/libs/rsvp/4.8.5/rsvp.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.5/qz-tray.js"></script>
 
+<!-- 🔥 QZ TRAY CERTIFICATE CONFIGURATION -->
+<script>
+// Use local certificate for automatic printing
+qz.security.setCertificatePromise(function() {
+    return Promise.resolve("C:\\\\qz\\\\cert\\\\cert.pem");
+});
+
+qz.security.setPrivateKeyPromise(function() {
+    return Promise.resolve("C:\\\\qz\\\\cert\\\\key.pem");
+});
+</script>
+
 <style>
 :root { --receipt-width-mm: 72mm; --font-family: "DejaVu Sans", Arial, sans-serif; --txt-color: #000; }
 html, body { margin:0; padding:0; font-family:var(--font-family); font-size:12px; color:var(--txt-color); }
