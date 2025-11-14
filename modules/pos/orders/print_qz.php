@@ -59,8 +59,6 @@ if (!empty($order->createdby)) {
 $branchName = isset($order->branchename) ? $order->branchename : '';
 $orderNo = isset($order->orderno) ? $order->orderno : $doc;
 $dateTime = date("d/m/Y H:i:s");
-
-$printerNameJS = addslashes(isset($order->printer) && $order->printer != '' ? $order->printer : '');
 ?>
 <!doctype html>
 <html lang="en">
@@ -75,9 +73,7 @@ $printerNameJS = addslashes(isset($order->printer) && $order->printer != '' ? $o
 <!-- 🔥 QZ TRAY CERTIFICATE CONFIGURATION -->
 <script>
 // Use local certificate for automatic printing
-// NEW (QZ Tray v2+)
 qz.security.setCertificatePromise(() => Promise.resolve("C:\\\\qz\\\\cert\\\\cert.pem"));
-
 </script>
 
 <style>
@@ -168,38 +164,32 @@ function getReceiptHTML(copyLabel) {
 }
 
 function ensureQZ() {
-    if (!qz.websocket.isActive()) return qz.websocket.connect();
-    return Promise.resolve();
+    return qz.websocket.isActive() ? Promise.resolve() : qz.websocket.connect();
 }
 
 function doPrint(copyLabel) {
-    return ensureQZ().then(function() {
-        var printerName = "<?php echo $printerNameJS; ?>";
-        return qz.printers.find().then(function(printers) {
+    return ensureQZ()
+        .then(() => qz.printers.find())
+        .then(printers => {
             if (!printers || printers.length === 0) {
                 alert("No printers available.");
-                return;
+                return Promise.reject("No printers found");
             }
-            if (!printerName) printerName = printers[0];
+            var printerName = printers[0]; // auto-select first available printer
+            var cfg = qz.configs.create(printerName);
             var data = [
                 { type: 'html', format: 'plain', data: getReceiptHTML(copyLabel) },
                 { type: 'raw', format: 'plain', data: '\x1D\x56\x00' } // CUT
             ];
-            var cfg = qz.configs.create(printerName);
             return qz.print(cfg, data);
         });
-    });
 }
 
 // ON LOAD: PRINT AND CLOSE
 window.onload = function() {
-    doPrint("Customer Copy").then(function() {
-        if (qz.websocket.isActive()) qz.websocket.disconnect();
-        window.close();
-    }).catch(function(err) {
-        console.error("Printing failed: ", err);
-        window.close();
-    });
+    doPrint("Customer Copy")
+        .then(() => { if (qz.websocket.isActive()) qz.websocket.disconnect(); window.close(); })
+        .catch(err => { console.error("Printing failed:", err); window.close(); });
 };
 </script>
 
