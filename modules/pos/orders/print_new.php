@@ -177,9 +177,16 @@ JsBarcode("#barcode", "<?php echo addslashes($orderNo); ?>", {format:"CODE39", w
 // auto print
 // window.onload = function(){ window.print(); }
 window.onload = function(){
+    // PRINT 2 COPIES
     window.print();
-    // close after a short delay to allow print dialog to trigger
-    setTimeout(function(){ window.close(); }, 500);
+    setTimeout(function() {
+        window.print();
+    }, 500); // small delay so Chrome queues the next print job
+
+    // Close after both prints
+    setTimeout(function() {
+        window.close();
+    }, 1200);
 };
 </script>
 
