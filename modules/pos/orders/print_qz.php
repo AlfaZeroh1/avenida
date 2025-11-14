@@ -74,6 +74,8 @@ $dateTime = date("d/m/Y H:i:s");
 <script>
 // Use local certificate for automatic printing
 qz.security.setCertificatePromise(() => Promise.resolve("C:\\\\qz\\\\cert\\\\cert.pem"));
+qz.security.setPrivateKeyPromise(() => Promise.resolve("C:\\\\qz\\\\cert\\\\key.pem"));
+
 </script>
 
 <style>
