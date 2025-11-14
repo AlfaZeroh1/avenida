@@ -70,35 +70,27 @@ $printerNameJS = addslashes(isset($order->printer) && $order->printer != '' ? $o
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/rsvp/4.8.5/rsvp.min.js"></script>
-
-<!-- 🔥 UPDATED: QZ TRAY 2.2.5 -->
 <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.5/qz-tray.js"></script>
 
-<!-- 🔥 REQUIRED SECURITY BLOCK FOR QZ 2.2.5 -->
+<!-- 🔥 QZ TRAY SECURITY CONFIGURATION FOR CERTIFICATE -->
 <script>
-//
-// SHA-256 hashing for QZ Tray (browser native API)
-//
+// SHA-256 hashing
 window.sha256 = function(data) {
     return crypto.subtle.digest("SHA-256", new TextEncoder().encode(data))
         .then(buf =>
             Array.from(new Uint8Array(buf))
-            .map(b => b.toString(16).padStart(2, "0"))
-            .join("")
+                .map(b => b.toString(16).padStart(2, "0"))
+                .join("")
         );
 };
+qz.security.setSha256Type(sha256);
 
-qz.security.setSha256Type(function(data) {
-    return sha256(data);
+// Use local certificate for automatic printing
+qz.security.setCertificatePromise(function() {
+    return Promise.resolve("C:\\qz\\certs\\cert.pem");
 });
-
-//
-// Disable signature (DEV MODE) — Works perfectly with local printers.
-// QZ Tray requires a promise that resolves to a signature string.
-//
-qz.security.setSignaturePromise(function(toSign) {
-    console.warn("QZ SIGNATURE DISABLED — returning empty signature");
-    return Promise.resolve("");
+qz.security.setPrivateKeyPromise(function() {
+    return Promise.resolve("C:\\qz\\certs\\key.pem");
 });
 </script>
 
@@ -171,9 +163,7 @@ html, body { margin:0; padding:0; font-family:var(--font-family); font-size:12px
 </div>
 
 <script>
-// ---------------------
 // BARCODE
-// ---------------------
 JsBarcode("#barcode", "<?php echo addslashes($orderNo); ?>", {
   format: "CODE39",
   width: 1,
@@ -182,9 +172,7 @@ JsBarcode("#barcode", "<?php echo addslashes($orderNo); ?>", {
   fontSize: 12
 });
 
-// ---------------------
 // PRINTING
-// ---------------------
 function getReceiptHTML(copyLabel) {
     var html = document.getElementById('receipt').outerHTML;
     if (copyLabel) {
@@ -194,57 +182,42 @@ function getReceiptHTML(copyLabel) {
 }
 
 function ensureQZ() {
-    if (!qz.websocket.isActive()) {
-        return qz.websocket.connect();
-    }
+    if (!qz.websocket.isActive()) return qz.websocket.connect();
     return Promise.resolve();
 }
 
 function doPrint(copyLabel) {
-    ensureQZ().then(function() {
+    return ensureQZ().then(function() {
         var printerName = "<?php echo $printerNameJS; ?>";
-
         return qz.printers.find().then(function(printers) {
             if (!printers || printers.length === 0) {
                 alert("No printers available.");
                 return;
             }
-
-            // fallback: first printer
-            if (!printerName) {
-                printerName = printers[0];
-                console.warn("Using first detected printer:", printerName);
-            }
-
+            if (!printerName) printerName = printers[0];
             return actuallyPrint(printerName, copyLabel);
         });
-
-    }).catch(function(err) {
-        alert("Printing failed: " + err.message);
-        console.error("QZ Print error:", err);
     });
 }
 
 function actuallyPrint(printerName, copyLabel) {
     var html = getReceiptHTML(copyLabel);
-
     var data = [
         { type: 'html', format: 'plain', data: html },
         { type: 'raw', format: 'plain', data: '\x1D\x56\x00' } // CUT
     ];
-
     var cfg = qz.configs.create(printerName);
-
     return qz.print(cfg, data);
 }
 
+// ON LOAD: PRINT AND CLOSE WINDOW
 window.onload = function() {
     doPrint("Customer Copy").then(function() {
         if (qz.websocket.isActive()) qz.websocket.disconnect();
-        setTimeout(function() { window.close(); }, 1500);
+        window.close(); // immediately close after sending print
     }).catch(function(err) {
-        alert("Printing setup failed: " + err.message);
-        console.error(err);
+        console.error("Printing failed: ", err);
+        window.close(); // close anyway
     });
 };
 </script>
