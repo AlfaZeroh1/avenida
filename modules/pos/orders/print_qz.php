@@ -169,7 +169,8 @@ function ensureQZ() {
 function doPrint(copyLabel) {
     ensureQZ().then(function() {
         var printerName = "<?php echo $printerNameJS; ?>";
-        if (!printerName) {
+        //if (!printerName) {
+        if (1==1) {
             // No printer in DB, use first available
             return qz.printers.find().then(function(printers) {
                 if (!printers || printers.length === 0) {
