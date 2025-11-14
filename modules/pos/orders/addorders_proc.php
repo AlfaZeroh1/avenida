@@ -109,18 +109,23 @@ if($obj->action=="Save"){
 			
 			logging("=======================".$obj->doc.":".$obj->documentno);
 			
-			if(checkSession()){
+			// if(checkSession()){
 			  
-			  $query="select distinct pos_orderdetails.brancheid2 from pos_orderdetails left join pos_orders on pos_orderdetails.orderid=pos_orders.id where pos_orders.orderno='$obj->doc'";//logging($query);
-			  $res = mysql_query($query);
-			  while($row=mysql_fetch_object($res)){
-			    printOrder($obj,1,false,false,$row->brancheid2);
-			  }
-			}
-			if(!empty($_SESSION['ismobile']))
-			  redirect("../../auth/users/logout.php");
-			else
-			  redirect("orderss.php");
+			//   $query="select distinct pos_orderdetails.brancheid2 from pos_orderdetails left join pos_orders on pos_orderdetails.orderid=pos_orders.id where pos_orders.orderno='$obj->doc'";//logging($query);
+			//   $res = mysql_query($query);
+			//   while($row=mysql_fetch_object($res)){
+			//     printOrder($obj,1,false,false,$row->brancheid2);
+			//   }
+			// }
+
+			// if(!empty($_SESSION['ismobile']))
+			//   redirect("../../auth/users/logout.php");
+			// else
+			//   redirect("orderss.php");
+
+			// AFTER saving order and doing printOrder calls:
+			include "auto_print_redirect.php";
+			exit;
 			
 		}
 		else{
