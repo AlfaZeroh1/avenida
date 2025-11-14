@@ -75,13 +75,9 @@ $printerNameJS = addslashes(isset($order->printer) && $order->printer != '' ? $o
 <!-- 🔥 QZ TRAY CERTIFICATE CONFIGURATION -->
 <script>
 // Use local certificate for automatic printing
-qz.security.setCertificatePromise(function() {
-    return Promise.resolve("C:\\\\qz\\\\cert\\\\cert.pem");
-});
+// NEW (QZ Tray v2+)
+qz.security.setCertificatePromise(() => Promise.resolve("C:\\\\qz\\\\cert\\\\cert.pem"));
 
-qz.security.setPrivateKeyPromise(function() {
-    return Promise.resolve("C:\\\\qz\\\\cert\\\\key.pem");
-});
 </script>
 
 <style>
