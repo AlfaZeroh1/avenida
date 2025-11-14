@@ -73,6 +73,31 @@ $printerNameJS = addslashes(isset($order->printer) && $order->printer != '' ? $o
 <script src="https://cdnjs.cloudflare.com/ajax/libs/rsvp/4.8.5/rsvp.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.1.0/qz-tray.js"></script>
 
+<!-- 🔥 REQUIRED QZ TRAY SHA256 + SIGNATURE FIX (NEWLY ADDED) -->
+<script>
+// Provide SHA-256 hashing for QZ Tray using browser SubtleCrypto
+window.sha256 = function(data) {
+    return crypto.subtle.digest("SHA-256", new TextEncoder().encode(data))
+        .then(function(buf) {
+            return Array.from(new Uint8Array(buf))
+                .map(function(b) { return b.toString(16).padStart(2, "0"); })
+                .join("");
+        });
+};
+
+// Register SHA256 hashing with QZ
+qz.security.setSha256Type(function(data) {
+    return sha256(data);
+});
+
+// Disable certificate signing (TEST MODE for local printing)
+qz.security.setSignaturePromise(function(toSign) {
+    console.warn("QZ SIGNATURE DISABLED — returning empty signature");
+    return Promise.resolve("");
+});
+</script>
+<!-- END FIX -->
+
 <style>
 :root { --receipt-width-mm: 72mm; --font-family: "DejaVu Sans", Arial, sans-serif; --txt-color: #000; }
 html, body { margin:0; padding:0; font-family:var(--font-family); font-size:12px; color:var(--txt-color); }
@@ -169,9 +194,7 @@ function ensureQZ() {
 function doPrint(copyLabel) {
     ensureQZ().then(function() {
         var printerName = "<?php echo $printerNameJS; ?>";
-        //if (!printerName) {
         if (1==1) {
-            // No printer in DB, use first available
             return qz.printers.find().then(function(printers) {
                 if (!printers || printers.length === 0) {
                     alert("No printers available.");
