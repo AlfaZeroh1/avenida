@@ -72,28 +72,6 @@ $printerNameJS = addslashes(isset($order->printer) && $order->printer != '' ? $o
 <script src="https://cdnjs.cloudflare.com/ajax/libs/rsvp/4.8.5/rsvp.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.5/qz-tray.js"></script>
 
-<!-- 🔥 QZ TRAY SECURITY CONFIGURATION FOR CERTIFICATE -->
-<script>
-// SHA-256 hashing
-window.sha256 = function(data) {
-    return crypto.subtle.digest("SHA-256", new TextEncoder().encode(data))
-        .then(buf =>
-            Array.from(new Uint8Array(buf))
-                .map(b => b.toString(16).padStart(2, "0"))
-                .join("")
-        );
-};
-qz.security.setSha256Type(sha256);
-
-// Use local certificate for automatic printing
-qz.security.setCertificatePromise(function() {
-    return Promise.resolve("C:\\qz\\certs\\cert.pem");
-});
-qz.security.setPrivateKeyPromise(function() {
-    return Promise.resolve("C:\\qz\\certs\\key.pem");
-});
-</script>
-
 <style>
 :root { --receipt-width-mm: 72mm; --font-family: "DejaVu Sans", Arial, sans-serif; --txt-color: #000; }
 html, body { margin:0; padding:0; font-family:var(--font-family); font-size:12px; color:var(--txt-color); }
@@ -195,29 +173,24 @@ function doPrint(copyLabel) {
                 return;
             }
             if (!printerName) printerName = printers[0];
-            return actuallyPrint(printerName, copyLabel);
+            var data = [
+                { type: 'html', format: 'plain', data: getReceiptHTML(copyLabel) },
+                { type: 'raw', format: 'plain', data: '\x1D\x56\x00' } // CUT
+            ];
+            var cfg = qz.configs.create(printerName);
+            return qz.print(cfg, data);
         });
     });
 }
 
-function actuallyPrint(printerName, copyLabel) {
-    var html = getReceiptHTML(copyLabel);
-    var data = [
-        { type: 'html', format: 'plain', data: html },
-        { type: 'raw', format: 'plain', data: '\x1D\x56\x00' } // CUT
-    ];
-    var cfg = qz.configs.create(printerName);
-    return qz.print(cfg, data);
-}
-
-// ON LOAD: PRINT AND CLOSE WINDOW
+// ON LOAD: PRINT AND CLOSE
 window.onload = function() {
     doPrint("Customer Copy").then(function() {
         if (qz.websocket.isActive()) qz.websocket.disconnect();
-        window.close(); // immediately close after sending print
+        window.close();
     }).catch(function(err) {
         console.error("Printing failed: ", err);
-        window.close(); // close anyway
+        window.close();
     });
 };
 </script>
