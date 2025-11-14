@@ -72,6 +72,7 @@ $dateTime = date("d/m/Y H:i:s");
 
 <!-- 🔥 QZ TRAY CERTIFICATE CONFIGURATION -->
 <script>
+
 // Use local certificate for automatic printing
 qz.security.setCertificatePromise(() => Promise.resolve("C:\\\\qz\\\\cert\\\\cert.pem"));
 qz.security.setPrivateKeyPromise(() => Promise.resolve("C:\\\\qz\\\\cert\\\\key.pem"));
@@ -155,6 +156,39 @@ JsBarcode("#barcode", "<?php echo addslashes($orderNo); ?>", {
   displayValue: true,
   fontSize: 12
 });
+
+// Auto-connect + retry logic
+function qzConnect() {
+    if (!qz.websocket.isActive()) {
+        console.log("Attempting connection to QZ Tray...");
+
+        return qz.websocket.connect().catch(err => {
+            console.error("QZ connection failed, retrying in 1 second... ", err);
+            return new Promise(resolve => {
+                setTimeout(() => resolve(qzConnect()), 1000);
+            });
+        });
+    }
+    return Promise.resolve();
+}
+
+// Ensure QZ is connected before printing
+function getQZConfig(printerName = null) {
+    let cfg = null;
+    if (printerName) {
+        cfg = qz.configs.create(printerName);
+    } else {
+        cfg = qz.configs.create(null);
+    }
+    return cfg;
+}
+
+async function printReceipt(data) {
+    await qzConnect(); // 🔥 ensures connection before printing
+
+    const cfg = getQZConfig();  
+    return qz.print(cfg, data).catch(err => console.error("Print error:", err));
+}
 
 // PRINTING
 function getReceiptHTML(copyLabel) {
