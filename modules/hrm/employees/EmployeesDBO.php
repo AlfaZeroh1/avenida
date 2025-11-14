@@ -8,15 +8,59 @@ class EmployeesDBO extends DB{
 	var $affectedRows;
  var $table="hrm_employees";
 
+	// 
 	function persist($obj){
-		$sql="insert into hrm_employees(id,pfnum,firstname,middlename,lastname,type,gender,bloodgroup,rhd,supervisorid,startdate,enddate,dob,idno,passportno,phoneno,email,officemail,physicaladdress,nationalityid,countyid,constituencyid,location,town,marital,spouse,spouseidno,spousetel,spouseemail,nssfno,nhifno,pinno,helbno,employeebankid,bankbrancheid,bankacc,clearingcode,ref,basic,assignmentid,gradeid,statusid,image,createdby,createdon,lasteditedby,lasteditedon,ipaddress)
-						values('$obj->id','$obj->pfnum','$obj->firstname','$obj->middlename','$obj->lastname','$obj->type','$obj->gender','$obj->bloodgroup','$obj->rhd','$obj->supervisorid','$obj->startdate','$obj->enddate','$obj->dob','$obj->idno','$obj->passportno','$obj->phoneno','$obj->email','$obj->officemail','$obj->physicaladdress',$obj->nationalityid,$obj->countyid,'$obj->constituencyid','$obj->location','$obj->town','$obj->marital','$obj->spouse','$obj->spouseidno','$obj->spousetel','$obj->spouseemail','$obj->nssfno','$obj->nhifno','$obj->pinno','$obj->helbno',$obj->employeebankid,$obj->bankbrancheid,'$obj->bankacc','$obj->clearingcode','$obj->ref','$obj->basic',$obj->assignmentid,$obj->gradeid,$obj->statusid,'$obj->image','$obj->createdby','$obj->createdon','$obj->lasteditedby','$obj->lasteditedon','$obj->ipaddress')";		
-		$this->sql=$sql;
-		if(mysql_query($sql,$this->connection)){		
-			$this->id=mysql_insert_id();
-			return true;	
-		}		
-	}		
+		// Define all columns that employees table expects
+		$allFields = array(
+			"pfnum","firstname","middlename","lastname","type","gender",
+			"bloodgroup","rhd","supervisorid","startdate","enddate","dob",
+			"idno","passportno","phoneno","email","officemail","physicaladdress",
+			"nationalityid","countyid","constituencyid","location","town",
+			"marital","spouse","spouseidno","spousetel","spouseemail",
+			"nssfno","nhifno","pinno","helbno","employeebankid","bankbrancheid",
+			"bankacc","clearingcode","ref","basic","assignmentid","gradeid",
+			"statusid","image","createdby","createdon","lasteditedby",
+			"lasteditedon","ipaddress"
+		);
+
+		$columns = array();
+		$values  = array();
+
+		foreach ($allFields as $field) {
+
+			if (isset($obj->$field) && $obj->$field !== "" && $obj->$field !== null && $obj->$field !== "NULL") {
+
+				$columns[] = $field;
+
+				// numeric columns (DO NOT quote)
+				if (is_numeric($obj->$field)) {
+					$values[] = $obj->$field;
+				} else {
+					// escape strings to avoid breaking SQL
+					$values[] = "'" . mysql_real_escape_string($obj->$field) . "'";
+				}
+			}
+		}
+
+		// Build SQL
+		$sql = "INSERT INTO hrm_employees (" . implode(",", $columns) . ")
+				VALUES (" . implode(",", $values) . ")";
+
+		// --- DEBUG ---
+		// die($sql);
+
+		$this->sql = $sql;
+
+		if (mysql_query($sql, $this->connection)) {
+			$this->id = mysql_insert_id();
+			return true;
+		}
+
+		return false;
+	}
+
+	// 
+ 
  
 	function update($obj,$where=""){			
 		if(empty($where)){

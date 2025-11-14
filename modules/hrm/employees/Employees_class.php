@@ -61,12 +61,20 @@ class Employees
 		$this->id=str_replace("'","\'",$obj->id);
 		$this->pfnum=str_replace("'","\'",$obj->pfnum);
 		$this->firstname=str_replace("'","\'",$obj->firstname);
+		if(empty($obj->middlename))
+			$obj->middlename='-';
 		$this->middlename=str_replace("'","\'",$obj->middlename);
 		$this->lastname=str_replace("'","\'",$obj->lastname);
 		$this->gender=str_replace("'","\'",$obj->gender);
 		$this->type=str_replace("'","\'",$obj->type);
+		if(empty($obj->bloodgroup))
+			$obj->bloodgroup='A';
 		$this->bloodgroup=str_replace("'","\'",$obj->bloodgroup);
+		if(empty($obj->rhd))
+			$obj->rhd='Negative';
 		$this->rhd=str_replace("'","\'",$obj->rhd);
+		if(empty($obj->supervisorid))
+			$obj->supervisorid='1';
 		$this->supervisorid=str_replace("'","\'",$obj->supervisorid);
 		$this->startdate=str_replace("'","\'",$obj->startdate);
 		$this->enddate=str_replace("'","\'",$obj->enddate);
@@ -86,6 +94,8 @@ class Employees
 		$this->constituencyid=str_replace("'","\'",$obj->constituencyid);
 		$this->location=str_replace("'","\'",$obj->location);
 		$this->town=str_replace("'","\'",$obj->town);
+		if(empty($obj->marital))
+			$obj->marital='No';
 		$this->marital=str_replace("'","\'",$obj->marital);
 		$this->spouse=str_replace("'","\'",$obj->spouse);
 		$this->spouseidno=str_replace("'","\'",$obj->spouseidno);
